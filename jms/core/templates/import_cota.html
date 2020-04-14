@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        table {
+          font-family: arial, sans-serif;
+          border-collapse: collapse;
+          width: 100%;
+        }
+        
+        td, th {
+          border: 1px solid #dddddd;
+          text-align: left;
+          padding: 8px;
+        }
+        
+        tr:nth-child(even) {
+          background-color: #dddddd;
+        }
+        </style>
+</head>
+<body>
+    RESULTADO DA IMPORTACAO: 
+    <table>
+        <tr> 
+          <td>Cpf_Vendedor          </td>
+          <td>Nome_Vendedor         </td>
+          <td>Data_da_Venda         </td>
+          <td>Prazo                 </td>
+          <td>Tipo_contrato         </td>
+          <td>Modelo                </td>
+          <td>Status                </td>
+          <td>Cliente               </td>
+          <td>Municipio             </td>
+          <td>Telefone              </td>
+          <td>Celular               </td>
+          <td>Ponto_de_Venda        </td>
+          <td>Parcela               </td>
+          <td>Data_de_Vencimento    </td>
+          <td>Grupo                 </td>
+          <td>Cota                  </td>
+          <td>R                     </td>
+          <td>D                     </td>
+          <td>Credito               </td>
+          <td>Data_da_Contemplacao  </td>
+          <td>Tipo_de_Contemplacao  </td>
+          <td>Efetuou_Negociacao    </td>
+          <td>Proposta              </td>
+          <td>Digito_da_Proposta    </td>
+          <td>Vl_total_amortizado   </td>
+          <td>Vl_Quitacao           </td>
+          <td>Plano                 </td>
+          <td>Porcentagem_Amortizado</td>
+          <td>Porcentagem_Mensal    </td>
+          <td>Qtd_Parcelas          </td>
+          <td>Seguro_de_Vida        </td>         
+        </tr>
+    {% for i in lista %}
+        <tr>
+            <td>{{i.Cpf_Vendedor          }}</td>
+            <td>{{i.Nome_Vendedor         }}</td>
+            <td>{{i.Data_da_Venda         }}</td>
+            <td>{{i.Prazo                 }}</td>
+            <td>{{i.Tipo_contrato         }}</td>
+            <td>{{i.Modelo                }}</td>
+            <td>{{i.Status                }}</td>
+            <td>{{i.Cliente               }}</td>
+            <td>{{i.Municipio             }}</td>
+            <td>{{i.Telefone              }}</td>
+            <td>{{i.Celular               }}</td>
+            <td>{{i.Ponto_de_Venda        }}</td>
+            <td>{{i.Parcela               }}</td>
+            <td>{{i.Data_de_Vencimento    }}</td>
+            <td>{{i.Grupo                 }}</td>
+            <td>{{i.Cota                  }}</td>
+            <td>{{i.R                     }}</td>
+            <td>{{i.D                     }}</td>
+            <td>{{i.Credito               }}</td>
+            <td>{{i.Data_da_Contemplacao  }}</td>
+            <td>{{i.Tipo_de_Contemplacao  }}</td>
+            <td>{{i.Efetuou_Negociacao    }}</td>
+            <td>{{i.Proposta              }}</td>
+            <td>{{i.Digito_da_Proposta    }}</td>
+            <td>{{i.Vl_total_amortizado   }}</td>
+            <td>{{i.Vl_Quitacao           }}</td>
+            <td>{{i.Plano                 }}</td>
+            <td>{{i.Porcentagem_Amortizado}}</td>
+            <td>{{i.Porcentagem_Mensal    }}</td>
+            <td>{{i.Qtd_Parcelas          }}</td>
+            <td>{{i.Seguro_de_Vida        }}</td>
+
+        </tr>
+    {% endfor %}
+</table>
+
+</body>
+</html>

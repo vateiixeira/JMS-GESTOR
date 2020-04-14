@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        table {
+          font-family: arial, sans-serif;
+          border-collapse: collapse;
+          width: 100%;
+        }
+        
+        td, th {
+          border: 1px solid #dddddd;
+          text-align: left;
+          padding: 8px;
+        }
+        
+        tr:nth-child(even) {
+          background-color: #dddddd;
+        }
+        </style>
+</head>
+<body>
+    RESULTADO DA IMPORTACAO: 
+    <table>
+        <tr>          
+        </tr>
+    {% for i in lista %}
+        <tr>
+            <td>{{i.Empresa              }}</td>
+            <td>{{i.Data                 }}</td>
+            <td>{{i.Nota_Fiscal          }}</td>
+            <td>{{i.Serie                }}</td>
+            <td>{{i.Valor_da_Nota        }}</td>
+            <td>{{i.Veiculo              }}</td>
+            <td>{{i.Chassi               }}</td>
+            <td>{{i.Forma_Pagamento      }}</td>
+            <td>{{i.Vendedor             }}</td>
+            <td>{{i.Cliente              }}</td>
+            <td>{{i.CPF_CNPJ_Cliente     }}</td>
+            <td>{{i.Novo                 }}</td>
+            <td>{{i.Quantidade           }}</td>
+            <td>{{i.Operacao_Interna     }}</td>
+            <td>{{i.Data_Compra          }}</td>
+            <td>{{i.Custo_Medio          }}</td>
+            <td>{{i.Margem               }}</td>
+            <td>{{i.Margem_Porcentagem   }}</td>
+            <td>{{i.Ano_Fab              }}</td>
+            <td>{{i.Ano_Modelo           }}</td>
+            <td>{{i.Municipio            }}</td>
+            <td>{{i.Valor_Tabela         }}</td>
+            <td>{{i.Emp_Funcionario      }}</td>
+            <td>{{i.Motivo_Devolucao     }}</td>
+            <td>{{i.Cor                  }}</td>
+            <td>{{i.Tipo                 }}</td>
+            <td>{{i.Telefone             }}</td>
+            <td>{{i.Celular              }}</td>
+            <td>{{i.email                }}</td>
+            <td>{{i.Placa                }}</td>
+            <td>{{i.Despesa_Oficina      }}</td>
+            <td>{{i.Despesa_Financeira   }}</td>
+            <td>{{i.Valor_Venda_Gerencial}}</td>
+            <td>{{i.Preço_PPS            }}</td>
+            <td>{{i.Base_Comissao        }}</td>
+            <td>{{i.Forma_Fabrica        }}</td>
+            <td>{{i.Sub_Forma_Fabrica    }}</td>
+            <td>{{i.Modalidade_Venda     }}</td>
+            <td>{{i.Grupo_Pessoa_Vendedor}}</td>
+        </tr>
+    {% endfor %}
+</table>
+
+</body>
+</html>
