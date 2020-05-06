@@ -1,16 +1,17 @@
 import xlrd , datetime
 from .models import Moto
 import os
+from urllib.request import urlopen
+from pathlib import Path
 
-def xlsx_moto():
-    filename = os.path.join(os.path.dirname(os.path.dirname(__file__)),'MOTOS.xlsx')
+def xlsx_moto(url_link):
 
-    worbook = xlrd.open_workbook(filename)
+    worbook = xlrd.open_workbook(url_link)
     sheet = worbook.sheet_by_index(0)
 
     aux = []
 
-    for row in range(1, sheet.nrows):
+    for row in range(1, (sheet.nrows - 1)):
 
         Empresa                 = sheet.row(row)[1].value
         Data                    = xlrd.xldate_as_datetime(sheet.row(row)[2].value, 0)
@@ -51,7 +52,7 @@ def xlsx_moto():
         Sub_Forma_Fabrica       = sheet.row(row)[44].value
         Modalidade_Venda        = sheet.row(row)[45].value
         Grupo_Pessoa_Vendedor   = sheet.row(row)[58].value
-
+        
         if Municipio == "JANAÚBA":
             Municipio = "JANAUBA"
         elif Municipio == "SÃO FRANCISCO":
@@ -72,6 +73,9 @@ def xlsx_moto():
             Municipio = "JAÍBA"
         elif Municipio == "VERDELÂNDIA":
             Municipio = "VERDELANDIA"
+
+        if Veiculo == "BIZ 125 ":
+            Veiculo = 'BIZ 125'
 
         Margem_Porcentagem = Margem_Porcentagem.replace(',', '.')
 

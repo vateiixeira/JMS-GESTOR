@@ -3,10 +3,9 @@ from .models import Cota
 import os
 from datetime import datetime
 
-def xlsx_cota():
-    filename = os.path.join(os.path.dirname(os.path.dirname(__file__)),'Cotas.xlsx')
+def xlsx_cota(url_link):
 
-    worbook = xlrd.open_workbook(filename)
+    worbook = xlrd.open_workbook(url_link)
     sheet = worbook.sheet_by_index(0)
 
     aux = []
@@ -55,7 +54,6 @@ def xlsx_cota():
         Modelo = Modelo.replace('*','')
 
         if Data_da_Contemplacao == '':            
-            print('nulo')
             Data_da_Contemplacao = None
         else:
             Data_da_Contemplacao = Data_da_Contemplacao.replace('/','-')
@@ -113,6 +111,7 @@ def xlsx_cota():
     #     return 'TENTE NOVAMENTE'
     #return aux
     Cota.objects.bulk_create(aux)
+    print('criou')
 
 
 

@@ -4,3 +4,7 @@ from .models import *
 admin.site.register(Cidade)
 admin.site.register(Equipe)
 admin.site.register(MotoPerfil)
+admin.site.register(PlanejadoRealizado)
+admin.site.register(MetaCotaCidade)
+admin.site.register(MetaMotoCidade)
+admin.site.register(DocumentMoto)

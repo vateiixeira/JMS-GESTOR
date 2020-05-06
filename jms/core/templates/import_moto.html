@@ -23,8 +23,14 @@
         </style>
 </head>
 <body>
-    RESULTADO DA IMPORTACAO: 
-    <table>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Upload</button>
+  </form>
+
+
+    <!-- <table>
         <tr>          
         </tr>
     {% for i in lista %}
@@ -70,7 +76,7 @@
             <td>{{i.Grupo_Pessoa_Vendedor}}</td>
         </tr>
     {% endfor %}
-</table>
+</table> -->
 
 </body>
 </html>

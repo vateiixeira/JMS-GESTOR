@@ -25,6 +25,9 @@
     <!-- VUE JS -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- VUE LOADING -->
+    <script src="https://cdn.jsdelivr.net/npm/vue-loading-overlay@3"></script>
+    <link href="https://cdn.jsdelivr.net/npm/vue-loading-overlay@3/dist/vue-loading.css" rel="stylesheet">
      
     <!-- Title -->
     <title>Dashkit </title>
@@ -277,7 +280,7 @@
               </div>
             </div>
           </div>
-
+          <div class="container-fluid">
         <div class="row">
           <div class="col-6 col-md-4">
 
@@ -325,17 +328,18 @@
                   <tbody  v-for="i in cidades" :class="{active:i.nome == selected}" @click="selected = i.nome">
                     <tr>
                       <td>                        
-                          <div @click="desempenho" v-bind:id="[[i.nome]]" > 
-                            [[i.nome]]                            
+                          <div @click="desempenho" v-bind:id="[[i.nome]]" style=" width: 120px;" > 
+                            [[i.nome.slice(0,20)]]                            
                           </div>          
                       </td>
                       <td >
-                        <span class="badge badge-soft-success"><h3>[[i.moto]]</h3></span>
+                        <!-- <span v-bind:class="[ i.desempenho === 'warning' ? warningClass : successClass ]"><h3>[[i.moto]]</h3></span> -->
+                        <span v-bind:class="desempenhoClass(i.desempenho)"><h3>[[i.moto]]</h3></span>
                       </td>
                       <td >
-                        <span class="badge badge-soft-success"><h3>[[i.cota]]</h3></span>
+                        <span v-bind:class="desempenhoClass(i.desempenho_cota)"><h3>[[i.cota]]</h3></span>
                       </td>
-                      <td >
+                      <td>
                         <span class="badge badge-soft-success"><h3>**</h3></span>
                       </td> 
                     </tr>
@@ -372,7 +376,7 @@
                 </div> <!-- / .row -->
               </div>
               
-              <div class="table-responsive mb-0" data-toggle="lists" data-options="{&quot;valueNames&quot;: [&quot;goal-project&quot;, &quot;goal-status&quot;, &quot;goal-progress&quot;, &quot;goal-date&quot;]}">
+              <div class="table-responsive-sm" data-toggle="lists" data-options="{&quot;valueNames&quot;: [&quot;goal-project&quot;, &quot;goal-status&quot;, &quot;goal-progress&quot;, &quot;goal-date&quot;]}">
                 <table class="table table-sm table-nowrap card-table">
                   
                   <thead>                   
@@ -407,7 +411,7 @@
                         <div class="avatar avatar-xs">
                           <img src="{{ value.avatar.url}}" alt="..." class="avatar-img rounded-circle">
                         </div>
-                        <div id="nome-vendedor">{{value.vendedor}}</div>                        
+                        <div id="nome-vendedor" style="width: 30px;">{{value.vendedor}}</div>                        
                       </td>
                       <td class="goal-status">
                         <span class="badge badge-soft-success"><h3>{{value.moto}}</h3></span>
@@ -429,16 +433,38 @@
                         <div class="avatar avatar-xs">
                           <img v-bind:src="[[i.avatar]]" alt="..." class="avatar-img rounded-circle">
                         </div>
-                        <div id="nome-vendedor">[[i.user]]</div>                        
+                        <div id="nome-vendedor">[[i.nome]]</div>                        
                       </td>
                       <td class="goal-status">
-                        <span class="badge badge-soft-success">Success</span>
+                        <span class="badge badge-soft-success"><h3>[[i.moto]]</h3></span>
                       </td>
                       <td class="goal-progress">
-                        <span class="badge badge-soft-success">Success</span>
+                        <span class="badge badge-soft-success"><h3>[[i.cota]]</h3></span>
                       </td>
                       <td class="goal-date">
-                        <span class="badge badge-soft-success">Success</span>
+                        <span class="badge badge-soft-success"><h3>[[i.visita]]</h3></span>
+                      </td> 
+                    </tr>
+                    <tr>                      
+                    </tr>
+                  </tbody>
+                  <!--  USUARIO QUE VENDERAM MAS NAO SAO DA EQUIPE -> MODEL FOREST -->
+                  <tbody class="list" v-for="i in forest">
+                    <tr class="forest" >
+                      <td >
+                        <div class="avatar avatar-xs">
+                          <img v-bind:src="[[i.avatar]]" alt="..." class="avatar-img rounded-circle">
+                        </div>
+                        <div id="nome-vendedor" >[[i.nome]]</div>                        
+                      </td>
+                      <td class="goal-status">
+                        <span class="badge badge-soft-success"><h3>[[i.moto]]</h3></span>
+                      </td>
+                      <td class="goal-progress">
+                        <span class="badge badge-soft-success"><h3>[[i.cota]]</h3></span>
+                      </td>
+                      <td class="goal-date">
+                        <span class="badge badge-soft-success"><h3>[[i.visita]]</h3></span>
                       </td> 
                     </tr>
                     <tr>                      
@@ -473,8 +499,8 @@
                   </div>
                 </div> <!-- / .row -->
               </div>
-              <div class="table-responsive mb-0" data-toggle="lists" data-options="{&quot;valueNames&quot;: [&quot;goal-project&quot;, &quot;goal-status&quot;, &quot;goal-progress&quot;, &quot;goal-date&quot;]}">
-                <table class="table table-sm table-nowrap card-table">
+              <div class="table-responsive-sm" data-toggle="lists" data-options="{&quot;valueNames&quot;: [&quot;goal-project&quot;, &quot;goal-status&quot;, &quot;goal-progress&quot;, &quot;goal-date&quot;]}">
+                <table class="table table-sm card-table" >
                   <thead>
                     <tr>
                       <th>
@@ -494,35 +520,42 @@
                       </th>
                       <th>
                         <a href="#" class="text-muted sort" data-sort="goal-date">
-                          AREA
+                          AREA MOTO
                         </a>
                       </th>                     
-                      <th></th>
+                      <th>
+                        <a href="#" class="text-muted sort" data-sort="goal-date">
+                          AREA COTA
+                        </a>
+                      </th>
                     </tr>
                   </thead>
 
-                  <tbody class="list" >
-                    <tr v-for="moto in motos" v-if="!detalheCidade">
-                      <td class="goal-project">
+                  <tbody class="list" ref="tableProduto" v-if="!detalheCidade">
+                    <tr v-for="moto in motos">
+                      <td class="goal-status">
                         <div class="avatar avatar-xs">
                           <img v-bind:src="[[moto.avatar]]" alt="..." class="avatar-img rounded-circle">
                         </div>
-                        [[moto.modelo]]
+                        <div style="width: 110px;">[[moto.modelo.slice(0,20)]]</div>
                       </td>
-                      <td class="goal-status">
-                        <span class="badge badge-soft-success"><h3>[[moto.moto]]</h3></span>
+                      <td class="goal-status" >
+                        <span class="badge badge-soft-success" ><h3 >[[moto.moto]]</h3></span>
                       </td>
                       <td class="goal-progress">
                         <span class="badge badge-soft-success"><h3>[[moto.cota]]</h3></span>
                       </td>
                       <td class="goal-date">
-                        <span class="badge badge-soft-success"><h3>[[moto.area]]%</h3></span>
+                        <span class="badge badge-soft-success"><h3>[[moto.area_moto]]%</h3></span>
+                      </td> 
+                      <td class="goal-date">
+                        <span class="badge badge-soft-success"><h3>[[moto.area_cota]]%</h3></span>
                       </td> 
                     </tr>
 
                     <!-- MOSTRA DETALHES DE CLICAR NA CIDADE -->
-                    <div v-else >
-                    <tr v-for="x in desempenhoMoto">
+                    <tbody v-else>
+                    <tr v-for="x in desempenhoMoto" >
                       <td class="goal-project">
                         <div class="avatar avatar-xs">
                           <img v-bind:src="[[x.avatar]]" alt="..." class="avatar-img rounded-circle">
@@ -536,10 +569,13 @@
                         <span class="badge badge-soft-success"><h3>[[x.cota]]</h3></span>
                       </td>
                       <td class="goal-date">
-                        <span class="badge badge-soft-success"><h3>[[x.area]]%</h3></span>
+                        <span class="badge badge-soft-success"><h3>[[x.area_moto]]%</h3></span>
+                      </td> 
+                      <td class="goal-date">
+                        <span class="badge badge-soft-success"><h3>[[x.area_cota]]%</h3></span>
                       </td> 
                     </tr>
-                  </div>
+                  
 
                   </tbody>
 
@@ -548,6 +584,8 @@
             </div>
           </div>
         </div> <!-- / .row -->
+          </div><!-- / .container fluid cards meio -->
+        <div class="container-fluid">
         <div class="row">
           <div class="col-12">
 
@@ -569,15 +607,17 @@
               </div>
             </div>
           </div>
+        </div>  
         </div> <!-- / .row -->
     </div>
   
 
     <!-- JAVASCRIPT
     ================================================== -->
-
     <!-- VUE JS -->
     <script>
+  Vue.use(VueLoading);
+  Vue.component('loading', VueLoading)
   const url = 'http://127.0.0.1:8000/api/'
 
   var app = new Vue({
@@ -586,12 +626,14 @@
       data: {
         regiao: '{{regiao_user}}',
         equipe: [],
+        forest: [],
         existeCidade: false,
         motos: [],
         cidades: [],
         desempenhoMoto: [],
         detalheCidade: false,
-        selected: undefined
+        selected: undefined,
+        fullPage: false
       },
       mounted () {
         var vm = this
@@ -604,29 +646,41 @@
                 vm.cidades = response.data
               })          
       },
+      computed: {
+      },
       methods: {
+          desempenhoClass: function(tipo) {
+            return {
+              'badge badge-soft-success' : tipo === 'success',
+              'badge badge-soft-danger' : tipo === 'error',
+              'badge badge-soft-warning' : tipo === 'warning',
+            }
+          } ,
           desempenho: function (event) {
-              var vm = this 
+              // LOADER
+              let loader = this.$loading.show({
+                container: this.fullPage ? null : this.$refs.tableProduto,
+                canCancel: true,
+                onCancel: this.onCancel,
+              })
               // PEGA NOME DA CIDADE CLICADA
               var cidade = event.target.id
 
               // APAGA LISTA DA ANTIGA CIDADE
-              vm.desempenhoMoto = []
-
-              //MUDAR HTML
-              // event.target.classList.add('active')
-              
+              this.desempenhoMoto = []
               // REQUEST PARA PEGAR DADOS DESTA CIDADE
               axios.get(`http://127.0.0.1:8000/api/desempenho/${cidade}`)              
-              .then(function (response) {
-                vm.equipe = response.data.equipe
-                vm.existeCidade = true
-                vm.desempenhoMoto = response.data.moto
-                vm.detalheCidade = true
+              .then(response => {
+                this.equipe = response.data.equipe
+                this.forest = response.data.forest
+                this.existeCidade = true
+                this.desempenhoMoto = response.data.moto
+                loader.hide()
+                this.detalheCidade = true
               })
-              .catch(function (error) {
-              // handle error
+              .catch(error =>{
               console.log(error);
+              loader.hide
               })
           }
       }
@@ -671,6 +725,9 @@
   }
   .active{
     background-color: rgb(96, 142, 202);
+  }
+  .forest{
+    background-color: rgb(224, 230, 174, 0.2);
   }
 
 </style>

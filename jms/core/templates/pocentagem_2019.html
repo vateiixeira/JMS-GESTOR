@@ -1,0 +1,122 @@
+{% load humanize %}
+{% load i18n %}
+{% load l10n %} 
+{% load cloudinary %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="A fully featured admin theme which can be used to build CRM, CMS, etc." />
+
+    <!-- Libs CSS -->
+    <link rel="stylesheet" href="../static/fonts/feather/feather.css" />
+    <link rel="stylesheet" href="../static/libs/flatpickr/dist/flatpickr.min.css" />
+    <link rel="stylesheet" href="../static/libs/quill/dist/quill.core.css" />
+    <link rel="stylesheet" href="../static/libs/highlightjs/styles/vs2015.css" />
+
+    <!-- Map -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.css" rel="stylesheet" />
+
+    <!-- Theme CSS -->
+     
+    <link rel="stylesheet" href="../static/css/theme-dark.min.css">
+
+    <!-- VUE JS -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- VUE LOADING -->
+    <script src="https://cdn.jsdelivr.net/npm/vue-loading-overlay@3"></script>
+    <link href="https://cdn.jsdelivr.net/npm/vue-loading-overlay@3/dist/vue-loading.css" rel="stylesheet">
+     
+    <!-- Title -->
+    <title>Dashkit </title>
+
+  </head>
+  <body>
+    <form method="post">
+      {% csrf_token %}
+      {{ form }}
+      <input type="submit" value="Submit">
+    </form>
+    <h2>Total de motos vendidas = {{valor_anual | intcomma}} </h2>
+    <h2>Precisa vender {{mensal | floatformat:3}} motos por mes para chegar num total anual de = {{valor_anual}}. </h2>
+    <h2>Meta de motos  ate dia 15 / 40% = {{porcen_40 |floatformat:3}} </h2>
+    <h2 class="red">Meta diaria até dia 15: {{porcen_40_dia}}</h2>
+    <h2>Meta de motos dia 15 ao dia 25 / 35% = {{porcen_75 |floatformat:3}} </h2>
+    <h2 class="red">Meta diaria dia 15 ao dia 25: {{porcen_75_dia}}</h2>
+    <h2>Meta de motos dia 25 ao dia 30/31 / 25% = {{porcen_25 |floatformat:3}} </h2>
+    <h2 class="red">Meta diaria dia 25 até dia 30: {{porcen_25_dia}}</h2>
+    <h6>{{query}} </h6>
+
+    <hr>
+    <h2> TABELA DE VENDAS POR MES</h2>
+    <table class="table">
+      <thead>
+        <tr>
+          {% if dict_mensal %}
+            {% for x,y in dict_mensal.items %}
+            <th scope="col">{{x}}</th>                     
+            {% endfor %}
+          {% else %}
+          NAO EXISTE NADA
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          {% for x,y in dict_mensal.items %}
+          <th scope="row">{{y}}</th>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+   
+  <!-- <script src="../static/js/gerente.js"></script> -->
+
+
+    <!-- Libs JS -->
+    <script src="../static/libs/jquery/dist/jquery.min.js"></script>
+    <script src="../static/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../static/libs/@shopify/draggable/lib/es5/draggable.bundle.legacy.js"></script>
+    <script src="../static/libs/autosize/dist/autosize.min.js"></script>
+    <script src="../static/libs/chart.js/dist/Chart.min.js"></script>
+    <script src="../static/libs/dropzone/dist/min/dropzone.min.js"></script>
+    <script src="../static/libs/flatpickr/dist/flatpickr.min.js"></script>
+    <script src="../static/libs/highlightjs/highlight.pack.min.js"></script>
+    <script src="../static/libs/jquery-mask-plugin/dist/jquery.mask.min.js"></script>
+    <script src="../static/libs/list.js/dist/list.min.js"></script>
+    <script src="../static/libs/quill/dist/quill.min.js"></script>
+    <script src="../static/libs/select2/dist/js/select2.full.min.js"></script>
+    <script src="../static/libs/chart.js/Chart.extension.js"></script>
+
+    <!-- Map -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.js'></script>
+
+    <!-- Theme JS -->
+    <script src="../static/js/theme.min.js"></script>
+    <script src="../static/js/dashkit.min.js"></script>
+
+ 
+
+
+
+
+  </body>
+
+<style>
+  h3{
+    margin-bottom: auto;
+  }
+  .active{
+    background-color: rgb(96, 142, 202);
+  }
+  .forest{
+    background-color: rgb(224, 230, 174, 0.2);
+  }
+  .red {
+    color: red;
+  }
+
+</style>
+</html>

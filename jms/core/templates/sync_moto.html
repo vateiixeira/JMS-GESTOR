@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="A fully featured admin theme which can be used to build CRM, CMS, etc." />
+
+    <!-- Libs CSS -->
+    <link rel="stylesheet" href="../static/fonts/feather/feather.css" />
+    <link rel="stylesheet" href="../static/libs/flatpickr/dist/flatpickr.min.css" />
+    <link rel="stylesheet" href="../static/libs/quill/dist/quill.core.css" />
+    <link rel="stylesheet" href="../static/libs/highlightjs/styles/vs2015.css" />
+
+    <!-- Map -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.css" rel="stylesheet" />
+
+    <!-- Theme CSS -->
+     
+    <link rel="stylesheet" href="../static/css/theme-dark.min.css">
+     
+</head>
+<body>
+    <div class="title"> O sistema irá atualizar em:</div>
+    <div class="demo"></div>
+
+    
+</body> 
+
+<script
+src="https://code.jquery.com/jquery-3.5.0.min.js"
+integrity="sha256-xNzN2a4ltkB44Mc/Jz3pT4iU1cmeR0FkXs4pru/JxaQ="
+crossorigin="anonymous"></script>
+
+<script src="../static/countdown/js/jquery.countdown.js"></script>
+
+<script>
+      $(function(){
+        $(".demo").countdown({
+          image: "../static/countdown/img/digits.png",
+		  startTime: "10:00",
+          format: "dd:hh:mm:ss",
+        });
+        setTimeout(function(){
+            window.location.reload(1);
+            }, 600000);
+      });
+    </script>
+<style>
+    .demo {
+    position: absolute;
+    margin: auto;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 500px;
+    height: 500px;
+
+}
+</style>
+</html>

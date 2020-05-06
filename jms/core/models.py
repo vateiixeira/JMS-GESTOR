@@ -23,9 +23,9 @@ class Moto(models.Model):
     Chassi                  = models.CharField(max_length=100)
     Forma_Pagamento         = models.CharField(max_length=100)
     Vendedor                = models.CharField(max_length=100)
-    Cliente                 = models.CharField(max_length=100)
+    Cliente                 = models.CharField(max_length=100)  
     Cpf_Cnpj_Cliente        = models.CharField(max_length=100)
-    Novo                    = models.BooleanField()
+    Novo                    = models.BooleanField(default=True)
     Quantidade              = models.IntegerField()
     Operacao_Interna        = models.CharField(max_length=100)
     Data_Compra             = models.DateField()
@@ -82,7 +82,7 @@ class Cota(models.Model):
     Vl_total_amortizado     = models.DecimalField(decimal_places=2, max_digits=7, default=0)              
     Vl_Quitacao             = models.DecimalField(decimal_places=2, max_digits=7, default=0)      
     Plano                   = models.CharField(max_length=100, null=True)
-    Porcentagem_Amortizado  = models.DecimalField(decimal_places=6, max_digits=8, default=0)              
+    Porcentagem_Amortizado  = models.DecimalField(decimal_places=6, max_digits=9, default=0)              
     Porcentagem_Mensal      = models.DecimalField(decimal_places=6, max_digits=8, default=0)           
     Qtd_Parcelas            = models.IntegerField()      
     Seguro_de_Vida          = models.CharField(max_length=100, null=True)      
@@ -107,10 +107,60 @@ class Equipe(models.Model):
     class Meta:
         verbose_name = "Equipe"
         verbose_name_plural = "Equipes"
-    
+
     def __str__(self):
         return str(self.user)
 
 class MotoPerfil(models.Model):
     nome = models.CharField('Nome', max_length=100)
     avatar = models.CharField('avatar', max_length=400)
+
+    class Meta:
+        verbose_name = "Perfil Moto"
+        verbose_name_plural = "Perfis Motos"
+    
+    def __str__(self):
+        return f'{self.nome}'
+
+
+class MetaMotoCidade(models.Model):
+    cidade = models.ForeignKey(Cidade, on_delete=models.CASCADE)
+    ano = models.IntegerField('Ano')
+    mes =  models.IntegerField('Mes')
+    modelo = models.ForeignKey(MotoPerfil, on_delete=models.CASCADE)
+    meta = models.IntegerField('Meta moto')
+
+    class Meta:
+        verbose_name = "Meta Moto Cidade"
+        verbose_name_plural = "Meta Moto Cidades"
+    
+    def __str__(self):
+        return f'{self.cidade}|{self.modelo}'
+
+
+class MetaCotaCidade(models.Model):
+    cidade = models.ForeignKey(Cidade, on_delete=models.CASCADE)
+    ano = models.IntegerField('Ano')
+    mes =  models.IntegerField('Mes')
+    modelo = models.ForeignKey(MotoPerfil, on_delete=models.CASCADE)
+    meta = models.IntegerField('Meta cota')
+
+    class Meta:
+        verbose_name = "Meta Cota Cidade"
+        verbose_name_plural = "Meta Cota Cidades"
+    
+    def __str__(self):
+        return f'{self.cidade}|{self.modelo}'
+
+class DocumentMoto(models.Model):
+    document = models.FileField(upload_to='documents/moto/%Y/%m/%d/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+class DocumentCota(models.Model):
+    document = models.FileField(upload_to='documents/cota/%Y/%m/%d/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+class TotalMensalMoto2019(models.Model):
+    cidade = models.CharField('Cidade', max_length=100)
+    mes = models.IntegerField('Mês')
+    qtd = models.IntegerField('Quantidade')
