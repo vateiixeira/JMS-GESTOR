@@ -1,0 +1,219 @@
+{% load humanize %}
+{% load i18n %}
+{% load l10n %} 
+{% load cloudinary %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="A fully featured admin theme which can be used to build CRM, CMS, etc." />
+
+    <!-- Libs CSS -->
+    <link rel="stylesheet" href="../static/fonts/feather/feather.css" />
+    <link rel="stylesheet" href="../static/libs/flatpickr/dist/flatpickr.min.css" />
+    <link rel="stylesheet" href="../static/libs/quill/dist/quill.core.css" />
+    <link rel="stylesheet" href="../static/libs/highlightjs/styles/vs2015.css" />
+
+    <!-- Map -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.css" rel="stylesheet" />
+
+    <!-- Theme CSS -->
+     
+    <link rel="stylesheet" href="../static/css/theme-dark.min.css">
+
+    <!-- VUE JS -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- VUE LOADING -->
+    <script src="https://cdn.jsdelivr.net/npm/vue-loading-overlay@3"></script>
+    <link href="https://cdn.jsdelivr.net/npm/vue-loading-overlay@3/dist/vue-loading.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
+     
+    <!-- Title -->
+    <title>DEMONSTRATIVO PRODUTO </title>
+
+  </head>
+  <body>
+    <div id="app" class="main-content">
+      <span>Dia</span>
+    <input type="text" v-model="dia" class="form-control form-control-rounded" placeholder="Dia">
+    <span>Mes</span>
+    <input type="text" v-model="mes" class="form-control form-control-rounded" placeholder="Mes">
+    <span>Ano</span>
+    <input type="text" v-model="ano" class="form-control form-control-rounded" placeholder="Ano">
+
+    <span>Regiao</span>
+    <select class="custom-select"  v-model="regiao">
+      <option>JNB</option>
+      <option>JNR</option>
+      <option>SFC</option>
+    </select>
+    <span>Modelo</span>
+    <select class="custom-select"  v-model="modelo">
+      {%for x in obj%}
+      <option >{{x.Veiculo}}</option>
+    {% endfor %}
+    </select>
+    <span>Cidade</span>
+    <select class="custom-select" v-model="cidade">
+      <option disabled value="">Escolha um item</option>
+      {%for x in cidade%}
+      <option>{{x.Municipio}}</option>
+    {% endfor %}
+    </select>
+    <span>Vendedor</span>
+    <select class="custom-select" v-model="vendedor">
+      {%for x in vendedor%}
+      <option >{{x.Vendedor}} - {{x.Vendedor_cpf}}</option>
+    {% endfor %}
+    </select>
+
+
+    <button type="button" class="btn btn-primary" @click="getRegiao">Filtrar Região</button>
+    <button type="button" class="btn btn-primary" @click="getCidade">Filtrar Cidade</button>
+    <button type="button" class="btn btn-primary" @click="getVendedor">Filtrar Vendedor</button>
+    <button type="button" class="btn btn-primary" @click="getModelo">Filtrar Modelo</button>
+
+
+    <hr>
+    <h1> RESULTADOS </h1>
+    <div v-if="data" v-for="key,value in data">
+      <div class="row" style="margin-left: 10px;"> <h2> [[value]]: [[ key]] </h2></div>
+      
+    </div>
+  </div>
+   
+  <!-- <script src="../static/js/gerente.js"></script> -->
+<!-- VUE JS -->
+<script>
+  Vue.use(VueLoading);
+  Vue.component('loading', VueLoading)
+
+  var app = new Vue({
+      el: '#app',
+      delimiters: ['[[', ']]'],
+      data: {
+        modelo: '',
+        dia: '',
+        mes: '',
+        ano: '',
+        regiao: '',
+        vendedor: '',
+        cidade: 'null',
+        data: ''
+      },
+      methods: {            
+          // getModelo: function () {
+          //     this.mes = 'adasdasdasd'
+          //     console.log(this.modelo)
+          //     console.log(this.dia)
+          //     console.log(this.mes)
+          //     console.log(this.ano)
+          //     // LOADER
+          //     // let loader = this.$loading.show({
+          //     //   container: this.fullPage ? null : this.$refs.tableProduto,
+          //     //   canCancel: true,
+          //     //   onCancel: this.onCancel,
+          //     // }) 
+          //     axios.get(`http://127.0.0.1:8000/api/produto/${modelo}/${dia}/${mes}/${ano}`)              
+          //     .then(response => {
+          //       console.log(this.response.data)
+          //       loader.hide()
+          //     })
+          //     .catch(error =>{
+          //     console.log(error);
+          //     loader.hide
+          //     })
+          // },
+          getModelo: function() {
+            this.data = ''
+            axios.get(`http://127.0.0.1:8000/api/produto/${this.modelo}/${this.dia}/${this.mes}/${this.ano}`)                  
+              .then(response => {
+                this.data = response.data ;
+                console.log(response.data);
+              })
+              .catch(error =>{
+              console.log(error);
+              })
+          },
+          getRegiao: function() {
+            this.data = ''
+            axios.get(`http://127.0.0.1:8000/api/produto/${this.modelo}/${this.dia}/${this.mes}/${this.ano}/${this.regiao}`)                  
+              .then(response => {
+                this.data = response.data ;
+                console.log(response.data);
+              })
+              .catch(error =>{
+              console.log(error);
+              })
+          },
+          getCidade: function() {
+            this.data = ''
+            axios.get(`http://127.0.0.1:8000/api/produto/${this.modelo}/${this.dia}/${this.mes}/${this.ano}/${this.cidade}/cidade`)                  
+              .then(response => {
+                this.data = response.data ;
+                console.log(response.data);
+              })
+              .catch(error =>{
+              console.log(error);
+              })
+          },
+          getVendedor: function() {
+            var test = this.vendedor.substr(-11);
+            console.log(test)
+            this.data = ''
+            axios.get(`http://127.0.0.1:8000/api/produto/${this.modelo}/${this.dia}/${this.mes}/${this.ano}/${test}/vendedor`)                  
+              .then(response => {
+                this.data = response.data ;
+                console.log(response.data);
+              })
+              .catch(error =>{
+              console.log(error);
+              })
+          },
+      }
+    })
+
+  </script>
+
+    <!-- Libs JS -->
+    <script src="../static/libs/jquery/dist/jquery.min.js"></script>
+    <script src="../static/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../static/libs/@shopify/draggable/lib/es5/draggable.bundle.legacy.js"></script>
+    <script src="../static/libs/autosize/dist/autosize.min.js"></script>
+    <script src="../static/libs/chart.js/dist/Chart.min.js"></script>
+    <script src="../static/libs/dropzone/dist/min/dropzone.min.js"></script>
+    <script src="../static/libs/flatpickr/dist/flatpickr.min.js"></script>
+    <script src="../static/libs/highlightjs/highlight.pack.min.js"></script>
+    <script src="../static/libs/jquery-mask-plugin/dist/jquery.mask.min.js"></script>
+    <script src="../static/libs/list.js/dist/list.min.js"></script>
+    <script src="../static/libs/quill/dist/quill.min.js"></script>
+    <script src="../static/libs/select2/dist/js/select2.full.min.js"></script>
+    <script src="../static/libs/chart.js/Chart.extension.js"></script>
+
+    <!-- Map -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.js'></script>
+
+    <!-- Theme JS -->
+    <script src="../static/js/theme.min.js"></script>
+    <script src="../static/js/dashkit.min.js"></script>
+
+  </body>
+
+<style>
+  h3{
+    margin-bottom: auto;
+  }
+  .active{
+    background-color: rgb(96, 142, 202);
+  }
+  .forest{
+    background-color: rgb(224, 230, 174, 0.2);
+  }
+  .red {
+    color: red;
+  }
+
+</style>
+</html>

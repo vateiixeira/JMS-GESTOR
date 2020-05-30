@@ -73,6 +73,18 @@ def xlsx_moto(url_link):
             Municipio = "JAÍBA"
         elif Municipio == "VERDELÂNDIA":
             Municipio = "VERDELANDIA"
+        elif Municipio == "JUVENÍLIA":
+            Municipio = "JUVENILIA"
+        elif Municipio == "LUISLÂNDIA":
+            Municipio = "LUISLANDIA"
+        elif Municipio == "MATIAS CARDOSO":
+            Municipio = "MATHIAS CARDOSO"
+        elif Municipio == "MONTALVÂNIA":
+            Municipio = "MONTALVANIA"
+        elif Municipio == "PEDRAS DE MARIA DA CRUZ":
+            Municipio = "PEDRA MARIA DA CRUZ"
+        elif Municipio == "PINTÓPOLIS":
+            Municipio = "PINTOPOLIS"
 
         if Veiculo == "BIZ 125 ":
             Veiculo = 'BIZ 125'

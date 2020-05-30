@@ -6,12 +6,14 @@ CARGOS_CHOICE = (
     ('VENDEDOR','VENDEDOR',),
     ('GERENTE','GERENTE',),
     ('SUPERVISOR','SUPERVISOR',),
+    ('ADMIN','ADMIN',),
 )
 
 REGIAO_CHOICE = (
     ('JNB','JNB',),
     ('SFC','SFC',),
     ('JNR','JNR',),
+    ('OUTROS','OUTROS',),
 )
 
 class Perfil(models.Model):
@@ -19,6 +21,7 @@ class Perfil(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     regiao = models.CharField(choices=REGIAO_CHOICE, max_length=100)
     avatar = CloudinaryField('avatar', null=True)
+    cpf = models.CharField(max_length=100, null=True)
 
     class Meta:
         verbose_name = "Perfil"

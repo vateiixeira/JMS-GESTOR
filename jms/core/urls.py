@@ -15,6 +15,11 @@ urlpatterns = [
     path('import/cota', import_cota, name='import_cota'),
     path('gerente/<int:id>', gerente, name='gerente'),
     path('porcentagem_2019', porcentagem_2019, name='porcentagem_2019'),
+    path('porcentagem_2019_tudo', porcentagem_2019_tudo, name='porcentagem_2019'),
+    path('demonstrativo/produto', demonstrativo_produto, name='demonstrativo_produto'),
+    path('atualiza/cidade/cota', atualiza_cidade_cota, name='atualiza_cidade_cota'),
+    path('atualiza/cidade/moto', atualiza_cidade_moto, name='atualiza_cidade_moto'),
+    path('atualiza/cidade/cota/outros', atualiza_cidade_cota_outro, name='atualiza_cidade_cota_outro')
 ]
 
 if settings.DEBUG:

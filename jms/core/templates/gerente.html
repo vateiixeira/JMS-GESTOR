@@ -514,20 +514,22 @@
                         </a>
                       </th>
                       <th>
+                        <a href="#" class="text-muted sort" data-sort="goal-date">
+                          AREA MOTO
+                        </a>
+                      </th> 
+                      <th>
                         <a href="#" class="text-muted sort" data-sort="goal-progress">
                           COTAS
                         </a>
                       </th>
-                      <th>
-                        <a href="#" class="text-muted sort" data-sort="goal-date">
-                          AREA MOTO
-                        </a>
-                      </th>                     
+                    
                       <th>
                         <a href="#" class="text-muted sort" data-sort="goal-date">
                           AREA COTA
                         </a>
                       </th>
+
                     </tr>
                   </thead>
 
@@ -540,17 +542,22 @@
                         <div style="width: 110px;">[[moto.modelo.slice(0,20)]]</div>
                       </td>
                       <td class="goal-status" >
-                        <span class="badge badge-soft-success" ><h3 >[[moto.moto]]</h3></span>
+                        <span class="badge badge-soft-success" ><h3>[[moto.moto]]</h3> </span>
+                        <h5>5,5652</h5>
                       </td>
+
+                      <td class="goal-date">
+                        <span class="badge badge-soft-success"><h3>[[moto.area_moto]]%</h3></span>
+                      </td>
+
                       <td class="goal-progress">
                         <span class="badge badge-soft-success"><h3>[[moto.cota]]</h3></span>
                       </td>
-                      <td class="goal-date">
-                        <span class="badge badge-soft-success"><h3>[[moto.area_moto]]%</h3></span>
-                      </td> 
+ 
                       <td class="goal-date">
                         <span class="badge badge-soft-success"><h3>[[moto.area_cota]]%</h3></span>
                       </td> 
+
                     </tr>
 
                     <!-- MOSTRA DETALHES DE CLICAR NA CIDADE -->
@@ -565,12 +572,14 @@
                       <td class="goal-status">
                         <span class="badge badge-soft-success"><h3>[[x.moto]]</h3></span>
                       </td>
-                      <td class="goal-progress">
-                        <span class="badge badge-soft-success"><h3>[[x.cota]]</h3></span>
-                      </td>
                       <td class="goal-date">
                         <span class="badge badge-soft-success"><h3>[[x.area_moto]]%</h3></span>
                       </td> 
+
+                      <td class="goal-progress">
+                        <span class="badge badge-soft-success"><h3>[[x.cota]]</h3></span>
+                      </td>
+
                       <td class="goal-date">
                         <span class="badge badge-soft-success"><h3>[[x.area_cota]]%</h3></span>
                       </td> 

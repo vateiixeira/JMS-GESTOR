@@ -23,6 +23,7 @@ class Moto(models.Model):
     Chassi                  = models.CharField(max_length=100)
     Forma_Pagamento         = models.CharField(max_length=100)
     Vendedor                = models.CharField(max_length=100)
+    Vendedor_cpf            = models.CharField(max_length=100)
     Cliente                 = models.CharField(max_length=100)  
     Cpf_Cnpj_Cliente        = models.CharField(max_length=100)
     Novo                    = models.BooleanField(default=True)
@@ -53,6 +54,7 @@ class Moto(models.Model):
     Sub_Forma_Fabrica       = models.CharField(max_length=50)
     Modalidade_Venda        = models.CharField(max_length=100)
     Grupo_Pessoa_Vendedor   = models.CharField(max_length=100)
+    Cancelada               = models.BooleanField('Cancelada', null=True)
 
 class Cota(models.Model):
     Cpf_Vendedor            = models.CharField(max_length=100)
