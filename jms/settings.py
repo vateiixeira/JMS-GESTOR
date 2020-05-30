@@ -5,10 +5,6 @@ import cloudinary.api  # cloudinary
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Configure Django App for Heroku.
-import django_heroku
-django_heroku.settings(locals())
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
@@ -80,7 +76,6 @@ WSGI_APPLICATION = 'jms.wsgi.application'
 #  SE FOR FALSO USA O BANCO DO HEORKU
 
 
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -90,8 +85,11 @@ DATABASES = {
         'HOST': 'localhost',
         'PORT': '',
     }
-    }   
+    } 
+      
+import dj_database_url
 
+DATABASES['default'] = dj_database_url.parse('postgres://cdqflvfllqialc:2a00b054b50d877c511968dc923995c317cd29807d5b9916df1169c4ddc4e766@ec2-3-234-109-123.compute-1.amazonaws.com:5432/d91bk62lvs0edu', conn_max_age=600)
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
