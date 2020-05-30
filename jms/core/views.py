@@ -7,7 +7,6 @@ from django.shortcuts import get_object_or_404
 from .utils import get_mes_ano
 from .models import Moto, Cota, Cidade,TotalMensalMoto2019
 from django.db.models import Sum
-import easygui
 from .forms import *
 import fdb
 from .sync_moto import migra_dados,verifica_dados_novos,migra_nota,verifica_cancelamento
