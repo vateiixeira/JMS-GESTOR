@@ -5,6 +5,10 @@ import cloudinary.api  # cloudinary
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# Configure Django App for Heroku.
+import django_heroku
+django_heroku.settings(locals())
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
@@ -74,10 +78,10 @@ WSGI_APPLICATION = 'jms.wsgi.application'
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 #  SE FOR FALSO USA O BANCO DO HEORKU
-BANCO_DEV = False
 
-if BANCO_DEV == True:
-    DATABASES = {
+
+
+DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'jms',
