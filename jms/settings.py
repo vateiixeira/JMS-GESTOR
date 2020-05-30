@@ -73,7 +73,11 @@ WSGI_APPLICATION = 'jms.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
-DATABASES = {
+#  SE FOR FALSO USA O BANCO DO HEORKU
+BANCO_DEV = False
+
+if BANCO_DEV == True:
+    DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'jms',
@@ -82,7 +86,7 @@ DATABASES = {
         'HOST': 'localhost',
         'PORT': '',
     }
-}
+    }   
 
 
 # Password validation
