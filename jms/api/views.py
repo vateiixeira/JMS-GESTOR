@@ -4580,7 +4580,6 @@ def executa(QUERY,QUERY_TOTALIZADORES,dia,mes,ano,modelos,cidades,vendedores):
             santander_cons_qtd = 0
 
 
-        locale.get
         locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
 
         dict_cdc = {
