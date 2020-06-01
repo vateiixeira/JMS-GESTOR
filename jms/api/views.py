@@ -439,7 +439,7 @@ def desempenhoCidade(request, cidade, dia,mes,ano):
             cota = 0
 
         if moto == 0 and cota == 0:
-            ##print(i)
+            print(i)
             continue
         
         obj_avatar = MotoPerfil.objects.get(nome = i.nome)
@@ -704,7 +704,7 @@ def produto_modelo_regiao(request,modelo,dia,mes,ano,regiao):
     filtro_avista = avista_obj.filter(Municipio__in = list_cidade , Chassi__in = list_devolucao_chassi, Valor_da_Nota__in=list_devolucao_vlnota).distinct('Chassi')
     list_avista_exclude = []
     if filtro_avista.count() == 0:
-        ##print('Não tem notas de cancelamento')
+        print('Não tem notas de cancelamento')
     else:
         for i in filtro_avista:
             if i.Chassi not in list_chassi:
@@ -712,13 +712,13 @@ def produto_modelo_regiao(request,modelo,dia,mes,ano,regiao):
                 list_chassi.append(i.Chassi)
             else:
                 (f'Nota {i.Nota_Fiscal} ja existe na lista.. Não será adicionada')
-            ##print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_avista')
+            print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_avista')
 
     bv_obj = Moto.objects.filter(Municipio__in = list_cidade , Sub_Forma_Fabrica = 'BV', Veiculo = modelo, Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
     filtro_bv = bv_obj.filter(Municipio__in = list_cidade , Chassi__in = list_devolucao_chassi, Valor_da_Nota__in=list_devolucao_vlnota).distinct('Chassi')
     list_bv_exclude = []
     if filtro_bv.count() == 0:
-        ##print('Não tem notas de cancelamento')
+        print('Não tem notas de cancelamento')
     else:
         for i in filtro_bv:
             if i.Chassi not in list_chassi:
@@ -726,14 +726,14 @@ def produto_modelo_regiao(request,modelo,dia,mes,ano,regiao):
                 list_chassi.append(i.Chassi)
             else:
                 (f'Nota {i.Nota_Fiscal} ja existe na lista.. Não será adicionada')
-            ##print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_bv')
+            print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_bv')
 
         ######################## BRADESCO              
     bradesco_obj = Moto.objects.filter(Municipio__in = list_cidade , Sub_Forma_Fabrica = 'BRADESCO', Veiculo = modelo, Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
     filtro_bradesco = bradesco_obj.filter(Municipio__in = list_cidade , Chassi__in = list_devolucao_chassi, Valor_da_Nota__in=list_devolucao_vlnota).distinct('Chassi')
     list_bradesco_exclude = []
     if filtro_bradesco.count() == 0:
-        ##print('Não tem notas de cancelamento')
+        print('Não tem notas de cancelamento')
     else:
         for i in filtro_bradesco:
             if i.Chassi not in list_chassi:
@@ -741,14 +741,14 @@ def produto_modelo_regiao(request,modelo,dia,mes,ano,regiao):
                 list_chassi.append(i.Chassi)
             else:
                 (f'Nota {i.Nota_Fiscal} ja existe na lista.. Não será adicionada')
-            ##print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_bradesco')
+            print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_bradesco')
 
     ######################## BANCO HONDA  
     banco_honda_obj = Moto.objects.filter(Municipio__in = list_cidade , Sub_Forma_Fabrica = 'BANCO HONDA', Veiculo = modelo, Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
     filtro_banco_honda = banco_honda_obj.filter(Municipio__in = list_cidade , Chassi__in = list_devolucao_chassi, Valor_da_Nota__in=list_devolucao_vlnota).distinct('Chassi')
     list_banco_honda_exclude = []
     if filtro_banco_honda.count() == 0:
-        ##print('Não tem notas de cancelamento')
+        print('Não tem notas de cancelamento')
     else:
         for i in filtro_banco_honda:
             if i.Chassi not in list_chassi:
@@ -756,14 +756,14 @@ def produto_modelo_regiao(request,modelo,dia,mes,ano,regiao):
                 list_chassi.append(i.Chassi)
             else:
                 (f'Nota {i.Nota_Fiscal} ja existe na lista.. Não será adicionada')
-            ##print(f'Valor: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_banco_honda')
+            print(f'Valor: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_banco_honda')
     
     
     cnh_obj = Moto.objects.filter(Municipio__in = list_cidade , Sub_Forma_Fabrica = 'CNH - SEM ALIENAÇÃO', Veiculo = modelo, Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
     filtro_cnh = cnh_obj.filter(Municipio__in = list_cidade , Chassi__in = list_devolucao_chassi, Valor_da_Nota__in=list_devolucao_vlnota).distinct('Chassi')
     list_cnh_exclude = []
     if filtro_cnh.count() == 0:
-        ##print('Não tem notas de cancelamento')
+        print('Não tem notas de cancelamento')
     else:
         for i in filtro_cnh:
             if i.Chassi not in list_chassi:
@@ -771,13 +771,13 @@ def produto_modelo_regiao(request,modelo,dia,mes,ano,regiao):
                 list_chassi.append(i.Chassi)
             else:
                 (f'Nota {i.Nota_Fiscal} ja existe na lista.. Não será adicionada')
-            ##print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} //Numero: {i.Nota_Fiscal} // Modalidade: filtro_cnh')
+            print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} //Numero: {i.Nota_Fiscal} // Modalidade: filtro_cnh')
     
     cnh2_obj = Moto.objects.filter(Municipio__in = list_cidade , Sub_Forma_Fabrica = 'CNH - COM ALIENAÇÃO', Veiculo = modelo, Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
     filtro_cnh2 = cnh2_obj.filter(Municipio__in = list_cidade , Chassi__in = list_devolucao_chassi, Valor_da_Nota__in=list_devolucao_vlnota).distinct('Chassi')
     list_cnh2_exclude = []
     if filtro_cnh2.count() == 0:
-        ##print('Não tem notas de cancelamento')
+        print('Não tem notas de cancelamento')
     else:
         for i in filtro_cnh2:
             if i.Chassi not in list_chassi:
@@ -785,13 +785,13 @@ def produto_modelo_regiao(request,modelo,dia,mes,ano,regiao):
                 list_chassi.append(i.Chassi)
             else:
                 (f'Nota {i.Nota_Fiscal} ja existe na lista.. Não será adicionada')
-            ##print(f'Nota: {i.Nota_Fiscal} /// {i.Chassi} // Numero: {i.Valor_da_Nota} // Modalidade: filtro_cnh2')
+            print(f'Nota: {i.Nota_Fiscal} /// {i.Chassi} // Numero: {i.Valor_da_Nota} // Modalidade: filtro_cnh2')
     
     bndes_obj = Moto.objects.filter(Municipio__in = list_cidade , Sub_Forma_Fabrica = 'BANCO BNDES', Veiculo = modelo, Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
     filtro_bndes = bndes_obj.filter(Municipio__in = list_cidade , Chassi__in = list_devolucao_chassi, Valor_da_Nota__in=list_devolucao_vlnota).distinct('Chassi')
     list_bndes_exclude = []
     if filtro_bndes.count() == 0:
-        ##print('Não tem notas de cancelamento')
+        print('Não tem notas de cancelamento')
     else:
         for i in filtro_bndes:
             if i.Chassi not in list_chassi:
@@ -799,14 +799,14 @@ def produto_modelo_regiao(request,modelo,dia,mes,ano,regiao):
                 list_chassi.append(i.Chassi)
             else:
                 (f'Nota {i.Nota_Fiscal} ja existe na lista.. Não será adicionada')
-            ##print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_bndes')
+            print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_bndes')
     
     ############# BANCO DO BRASIL 
     brasil_obj = Moto.objects.filter(Municipio__in = list_cidade , Sub_Forma_Fabrica = 'BANCO DO BRASIL', Veiculo = modelo, Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
     filtro_brasil = brasil_obj.filter(Municipio__in = list_cidade , Chassi__in = list_devolucao_chassi, Valor_da_Nota__in=list_devolucao_vlnota).distinct('Chassi')
     filtro_brasil_exclude = []
     if filtro_brasil.count() == 0:
-        ##print('Não tem notas de cancelamento')
+        print('Não tem notas de cancelamento')
     else:
         for i in filtro_brasil:
             if i.Chassi not in list_chassi:
@@ -814,13 +814,13 @@ def produto_modelo_regiao(request,modelo,dia,mes,ano,regiao):
                 list_chassi.append(i.Chassi)
             else:
                 (f'Nota {i.Nota_Fiscal} ja existe na lista.. Não será adicionada')
-            ##print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_brasil')
+            print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_brasil')
 
     cartao_obj = Moto.objects.filter(Municipio__in = list_cidade , Sub_Forma_Fabrica = 'CARTÃO', Veiculo = modelo, Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
     filtro_cartao = cartao_obj.filter(Municipio__in = list_cidade , Chassi__in = list_devolucao_chassi, Valor_da_Nota__in=list_devolucao_vlnota).distinct('Chassi')
     list_cartao_exclude = []
     if filtro_cartao.count() == 0:
-        ##print('Não tem notas de cancelamento')
+        print('Não tem notas de cancelamento')
     else:
         for i in filtro_cartao:
             if i.Chassi not in list_chassi:
@@ -828,13 +828,13 @@ def produto_modelo_regiao(request,modelo,dia,mes,ano,regiao):
                 list_chassi.append(i.Chassi)
             else:
                 (f'Nota {i.Nota_Fiscal} ja existe na lista.. Não será adicionada')
-            ##print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_cartao')
+            print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_cartao')
 
     troca_obj = Moto.objects.filter(Municipio__in = list_cidade , Sub_Forma_Fabrica = 'MOTO USADA', Veiculo = modelo, Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
     filtro_troca = troca_obj.filter(Municipio__in = list_cidade , Chassi__in = list_devolucao_chassi, Valor_da_Nota__in=list_devolucao_vlnota).distinct('Chassi')
     list_troca_exclude = []
     if filtro_troca.count() == 0:
-        ##print('Não tem notas de cancelamento')
+        print('Não tem notas de cancelamento')
     else:
         for i in filtro_troca:
             if i.Chassi not in list_chassi:
@@ -842,13 +842,13 @@ def produto_modelo_regiao(request,modelo,dia,mes,ano,regiao):
                 list_chassi.append(i.Chassi)
             else:
                 (f'Nota {i.Nota_Fiscal} ja existe na lista.. Não será adicionada')
-            ##print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_troca')
+            print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_troca')
 
     cdcp_obj = Moto.objects.filter(Municipio__in = list_cidade , Sub_Forma_Fabrica__in = ['James CDCP Sem alienação', 'JAMES CDCP'], Veiculo = modelo, Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
     filtro_cdcp = cdcp_obj.filter(Municipio__in = list_cidade , Chassi__in = list_devolucao_chassi, Valor_da_Nota__in=list_devolucao_vlnota).distinct('Chassi')
     list_troca_exclude = []
     if filtro_cdcp.count() == 0:
-        ##print('Não tem notas de cancelamento')
+        print('Não tem notas de cancelamento')
     else:
         for i in filtro_cdcp:
             if i.Chassi not in list_chassi:
@@ -856,14 +856,14 @@ def produto_modelo_regiao(request,modelo,dia,mes,ano,regiao):
                 list_chassi.append(i.Chassi)
             else:
                 (f'Nota {i.Nota_Fiscal} ja existe na lista.. Não será adicionada')
-            ##print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_cdcp')
+            print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_cdcp')
 
     ######################### PONTA CONSORCIO
     ponta_obj = Moto.objects.filter(Municipio__in = list_cidade , Sub_Forma_Fabrica__in = ['PONTA CONSÓRCIOS'], Veiculo = modelo, Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
     filtro_ponta = ponta_obj.filter(Municipio__in = list_cidade , Chassi__in = list_devolucao_chassi, Valor_da_Nota__in=list_devolucao_vlnota).distinct('Chassi')
     filtro_ponta_exclude = []
     if filtro_ponta.count() == 0:
-        ##print('Não tem notas de cancelamento')
+        print('Não tem notas de cancelamento')
     else:
         for i in filtro_ponta:
             if i.Chassi not in list_chassi:
@@ -871,14 +871,14 @@ def produto_modelo_regiao(request,modelo,dia,mes,ano,regiao):
                 list_chassi.append(i.Chassi)
             else:
                 (f'Nota {i.Nota_Fiscal} ja existe na lista.. Não será adicionada')
-            ##print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_ponta')
+            print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_ponta')
 
     ######################### BRADESCO CONSORCIOS
     bradesco_cons_obj = Moto.objects.filter(Municipio__in = list_cidade , Sub_Forma_Fabrica = 'BRADESCO CONSÓRCIOS', Veiculo = modelo, Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
     filtro_bradesco_cons = bradesco_cons_obj.filter(Municipio__in = list_cidade , Chassi__in = list_devolucao_chassi, Valor_da_Nota__in=list_devolucao_vlnota).distinct('Chassi')
     filtro_bradesco_cons_exclude = []
     if filtro_bradesco_cons.count() == 0:
-        ##print('Não tem notas de cancelamento')
+        print('Não tem notas de cancelamento')
     else:
         for i in filtro_bradesco_cons:
             if i.Chassi not in list_chassi:
@@ -1357,7 +1357,7 @@ def produto_modelo_cidade(request,modelo,dia,mes,ano,cidade):
     list_devolucao_chassi = [] 
     list_devolucao_vlnota = [] 
     for i in devolucoes_obj:
-        ##print(i.Chassi)
+        print(i.Chassi)
         vlnota = i.Valor_da_Nota * -1
         list_devolucao_chassi.append(i.Chassi)
         list_devolucao_vlnota.append(vlnota)        
@@ -2026,7 +2026,7 @@ def produto_modelo_vendedor(request,modelo,dia,mes,ano,vendedor):
     list_devolucao_chassi = [] 
     list_devolucao_vlnota = [] 
     for i in devolucoes_obj:
-        ##print(i.Chassi)
+        print(i.Chassi)
         vlnota = i.Valor_da_Nota * -1
         list_devolucao_chassi.append(i.Chassi)
         list_devolucao_vlnota.append(vlnota)        
@@ -2692,7 +2692,7 @@ def produto_modelo_vendedor_cidade(request,modelo,dia,mes,ano,vendedor,cidade):
     list_devolucao_chassi = [] 
     list_devolucao_vlnota = [] 
     for i in devolucoes_obj:
-        ##print(i.Chassi)
+        print(i.Chassi)
         vlnota = i.Valor_da_Nota * -1
         list_devolucao_chassi.append(i.Chassi)
         list_devolucao_vlnota.append(vlnota)        
@@ -3362,7 +3362,7 @@ def produto_modelo_geral(request,modelo,dia,mes,ano):
     list_devolucao_chassi = [] 
     list_devolucao_vlnota = [] 
     for i in devolucoes_obj:
-        ##print(i.Chassi)
+        print(i.Chassi)
         vlnota = i.Valor_da_Nota * -1
         list_devolucao_chassi.append(i.Chassi)
         list_devolucao_vlnota.append(vlnota)        
@@ -4156,7 +4156,7 @@ def executa(QUERY,QUERY_TOTALIZADORES,dia,mes,ano,modelos,cidades,vendedores):
         list_devolucao_chassi = [] 
         list_devolucao_vlnota = [] 
         for i in devolucoes_obj:
-            ##print(i.Chassi)
+            print(i.Chassi)
             vlnota = i.Valor_da_Nota * -1
             list_devolucao_chassi.append(i.Chassi)
             list_devolucao_vlnota.append(vlnota)        
