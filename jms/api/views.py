@@ -114,7 +114,7 @@ def desempenho_vendedor(request,vendedor,regiao,dia,mes,ano):
             porcen_desempenho_cota = 0
         elif total_mensal_cota == 0:
             porcen_desempenho_cota = 100
-            print(cidade.nome)
+            print(cidade.nome.encode('ascii', 'ignore'))
         else:
             porcen_desempenho_cota = acumulado_mes_cota * 100 / total_mensal_cota
 
