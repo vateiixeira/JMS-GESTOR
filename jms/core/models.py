@@ -166,3 +166,39 @@ class TotalMensalMoto2019(models.Model):
     cidade = models.CharField('Cidade', max_length=100)
     mes = models.IntegerField('Mês')
     qtd = models.IntegerField('Quantidade')
+
+class PlanejadoMoto(models.Model):
+    regiao = models.CharField('Região', choices=REGIAO_CHOICE, max_length=100)
+    mes = models.IntegerField('Mês')
+    ano = models.IntegerField('Ano')
+    cidade = models.ForeignKey(Cidade, on_delete=models.CASCADE)
+    modelo = models.ForeignKey(MotoPerfil, on_delete=models.CASCADE)
+
+class SazonalidadeCidade(models.Model):
+    cidade = models.ForeignKey(Cidade, on_delete=models.CASCADE)
+    mes = models.IntegerField("Mês")
+    percentual = models.FloatField("Porcentual")
+    vl_total_anual = models.IntegerField("Valor total no ano")
+    ano_base = models.IntegerField("Ano Base")
+
+class SazonalidadeVendedor(models.Model):
+    vendedor_nome = models.CharField('Nome', max_length=250)
+    vendedor_cpf = models.CharField('CPF', max_length=100)
+    mes = models.IntegerField("Mês")
+    percentual = models.FloatField("Porcentual")
+    vl_total_anual = models.IntegerField("Valor total no ano")
+    ano_base = models.IntegerField("Ano Base")
+
+class SazonalidadeRegiao(models.Model):
+    regiao = models.CharField('Região', choices=REGIAO_CHOICE, max_length=100)
+    mes = models.IntegerField("Mês")
+    percentual = models.FloatField("Porcentual")
+    vl_total_anual = models.IntegerField("Valor total no ano")
+    ano_base = models.IntegerField("Ano Base")
+
+class SazonalidadeModelo(models.Model):
+    modelo = models.ForeignKey(MotoPerfil, on_delete=models.CASCADE)
+    mes = models.IntegerField("Mês")
+    percentual = models.FloatField("Porcentual")
+    vl_total_anual = models.IntegerField("Valor total no ano")
+    ano_base = models.IntegerField("Ano Base")

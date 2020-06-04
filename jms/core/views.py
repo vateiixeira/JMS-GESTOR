@@ -537,3 +537,4 @@ def atualiza_cidade_cota_outro(request):
         obj.save()
         print(f'Cidade {i} gravada com sucesso!')
     return render(request,template)
+
