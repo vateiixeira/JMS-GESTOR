@@ -5054,8 +5054,7 @@ def sazonalidade_cidade(request,cidade):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def sazonalidade_vendedor(request,vendedor):
-    ano = 2019
-    
+    ano = 2019    
     lista = []
     realizado_regiao_ano = Moto.objects.filter(Vendedor = vendedor, Data__gte = f'{ano}-1-1', Data__lte=f'{ano}-12-31').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
     if realizado_regiao_ano is None:

@@ -1,0 +1,23 @@
+[33mcommit 6db289c5b5f591b1419e92a705dba74b731425a5[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31mheroku/master[m[33m)[m
+Author: Vinicius Alexandre <vateiixeira@gmail.com>
+Date:   Thu Jun 4 19:34:07 2020 -0300
+
+    git
+
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mindex b5c22f7..2084e58 100644[m
+[1m--- a/.gitignore[m
+[1m+++ b/.gitignore[m
+[36m@@ -110,9 +110,9 @@[m [mmedia/[m
+ *.db[m
+ *.pid[m
+ # django migrations [m
+[31m-# **/migrations/**[m
+[31m-# !**/migrations[m
+[31m-# !**/migrations/__init__.py[m
+[32m+[m[32m**/migrations/**[m
+[32m+[m[32m!**/migrations[m
+[32m+[m[32m!**/migrations/__init__.py[m
+ [m
+ my_project.rar[m
+ *.rar[m
