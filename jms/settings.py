@@ -35,7 +35,8 @@ INSTALLED_APPS = [
     'corsheaders',
     # EXTENSIONS
     'cloudinary',
-    'rest_framework'
+    'rest_framework',
+    'reset_migrations'
 ]
 
 MIDDLEWARE = [
