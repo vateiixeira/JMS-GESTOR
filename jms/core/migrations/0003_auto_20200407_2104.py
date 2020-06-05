@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name='moto',
-            name='Preço_PPS',
+            name='Preco_PPS',
             field=models.DecimalField(decimal_places=2, default=0, max_digits=7),
         ),
         migrations.AlterField(

@@ -12,6 +12,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RemoveField(
             model_name='moto',
-            name='Preço_PPS',
+            name='Preco_PPS',
         ),
     ]

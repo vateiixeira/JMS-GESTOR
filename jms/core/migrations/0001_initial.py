@@ -48,7 +48,7 @@ class Migration(migrations.Migration):
                 ('Despesa_Oficina', models.DecimalField(decimal_places=2, max_digits=7)),
                 ('Despesa_Financeira', models.DecimalField(decimal_places=2, max_digits=7)),
                 ('Valor_Venda_Gerencial', models.DecimalField(decimal_places=2, max_digits=7)),
-                ('Preço_PPS', models.DecimalField(decimal_places=2, max_digits=7)),
+                ('Preco_PPS', models.DecimalField(decimal_places=2, max_digits=7)),
                 ('Base_Comissao', models.DecimalField(decimal_places=2, max_digits=7)),
                 ('Forma_Fabrica', models.CharField(max_length=50)),
                 ('Sub_Forma_Fabrica', models.CharField(max_length=50)),
