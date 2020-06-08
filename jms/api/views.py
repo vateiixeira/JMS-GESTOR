@@ -5117,12 +5117,12 @@ def user_detail(request):
 def new_user(request):
     
     data = json.loads(request.body.decode('utf-8'))
-    print(data)
+    #print(data)
     list_cidade = []
     for x in data['cidade']:
         list_cidade.append(x)
         
-    print(list_cidade)
+    #print(list_cidade)
     #checa se já tem cadastro
     try:
         Perfil.objects.get(cpf = data['cpf'])
@@ -5131,7 +5131,7 @@ def new_user(request):
         cria_user.username = data['cpf']
         cria_user.first_name = data['nome']
         cria_user.save()
-        print('salvou usuario')
+        #print('salvou usuario')
 
 
         obj_user = User.objects.get(username=data['cpf'])
@@ -5143,7 +5143,7 @@ def new_user(request):
         perfil.cpf = data['cpf']
         perfil.avatar = 'https://pbs.twimg.com/profile_images/444875479/logo_James_Motoshop_img.jpg'
         perfil.save()
-        print('salvou perfil')
+       # print('salvou perfil')
 
         for i in list_cidade:
             equipe = Equipe()
