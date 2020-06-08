@@ -153,6 +153,22 @@ def gerente(request, id):
     }
     return render(request,template,context)
 
+def cria_cidade(request):
+    obj = Moto.objects.all().distinct('Municipio')
+    for x in obj:
+        try:
+            Cidade.objects.get(nome = x.Municipio)
+            print(f'{x.Municipio} EXISTE, PULANDO CADASTRO')
+        except Cidade.DoesNotExist:
+            objCidade = Cidade()
+            objCidade.nome = x.Municipio
+            objCidade.regiao = x.Empresa
+            objCidade.save()
+            print(f'Cidade {x.Municipio} foi salva!')
+
+    template = 'limpo.html'
+    return render(request,template)
+
 def porcentagem_2019(request):
 
     dict_mensal = {}
@@ -231,10 +247,10 @@ def porcentagem_2019_tudo(request):
     porcen_75 = 0
     porcen_25 = 0
 
-    cidadesz = Moto.objects.filter().distinct('Municipio')
+    cidadesz = Cidade.objects.filter().distinct('nome')
     cidades = []
     for i in cidadesz:
-        cidades.append(i.Municipio)
+        cidades.append(i.nome)
 
 
     for x in cidades:
@@ -536,5 +552,51 @@ def atualiza_cidade_cota_outro(request):
         )
         obj.save()
         print(f'Cidade {i} gravada com sucesso!')
+    return render(request,template)
+
+def cria_usuarios(request):
+    obj = Moto.objects.all().distinct('Vendedor_cpf')
+    for i in obj:
+        if i.Vendedor == 'VENDEDOR SEM NOME' or i.Vendedor == 'JAMES MOTO SHOP LTDA':
+            print('NÃO AIDCIONADO USUARIOS')
+        else:
+            cria_user = User()
+            first_name = str(i.Vendedor)
+            cria_user.username = i.Vendedor_cpf
+            cria_user.first_name = first_name[0:25]
+            cria_user.save()
+            print('salvou usuario')
+
+            # pega municipio para checar região onde ele atua
+            cidade = Cidade.objects.get(nome = i.Municipio)
+            regiao = cidade.regiao
+
+            obj_user = User.objects.get(username=i.Vendedor_cpf)
+            ### fazendo perfil
+            perfil = Perfil()
+            perfil.cargo = 'VENDEDOR'
+            perfil.usuario = obj_user
+            perfil.regiao = regiao
+            perfil.cpf = i.Vendedor_cpf
+            perfil.save()
+            print('salvou perfil')
+
+            ### pega as cidade que ele atuou e joga na equipe
+            obj_municipios = Moto.objects.filter(Vendedor_cpf = i.Vendedor_cpf)
+            lista_cidades = []
+            for x in obj_municipios:
+                lista_cidades.append(x.Municipio)
+                equipe = Equipe()
+                equipe.user = obj_user
+                equipe.perfil = Perfil.objects.get(cpf = i.Vendedor_cpf)
+                try:
+                    equipe.cidade = Cidade.objects.get(nome = x.Municipio)
+                    equipe.save()
+                    print('ADICIONADA CIDADE')
+                except Cidade.DoesNotExist:
+                    print('Cidade não cadastrada, pulando registro.')
+
+  
+    template = '404.html'
     return render(request,template)
 

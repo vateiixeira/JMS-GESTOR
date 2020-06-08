@@ -17,6 +17,8 @@ from rest_framework.authentication import SessionAuthentication, BasicAuthentica
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.core.serializers import serialize 
 from django.db import IntegrityError
+import json
+from django.http import HttpResponse
 
 
 @api_view(['GET'])
@@ -337,10 +339,16 @@ def desempenho_regiao_equipe(request, regiao,id,dia,mes,ano):
             moto = 0
         if cota is None:
             cota = 0
+
+        # ACRESCENTA URL DEFAULT PARA NAO DA CONFLITO COM USUARIO SEM AVATAR
+        if i.avatar is None:
+            avatar = 'https://fastly.4sqi.net/img/general/600x600/15RKT9R_ASX1-9rLJ7Pdf9vo0UYrWVA2-igMBuGiDzw.jpg'
+        else:
+            avatar = i.avatar.url
         
         new_dict = {
-            'nome' : i.usuario.username,
-            'avatar' : i.avatar.url,
+            'nome' : i.usuario.first_name[0:15],
+            'avatar' : avatar,
             'moto' : moto,
             'cota' : cota,
             'visita' : visita,
@@ -385,9 +393,16 @@ def desempenhoCidade(request, cidade, dia,mes,ano):
             moto = 0
 
         visita = 152
+
+        # ACRESCENTA URL DEFAULT PARA NAO DA CONFLITO COM USUARIO SEM AVATAR
+        if i.perfil.avatar is None:
+            avatar = 'https://fastly.4sqi.net/img/general/600x600/15RKT9R_ASX1-9rLJ7Pdf9vo0UYrWVA2-igMBuGiDzw.jpg'
+        else:
+            avatar = i.perfil.avatar.url
+        
         new_dict_indi = {
-            'nome' : i.user.first_name,
-            'avatar' : i.perfil.avatar.url,
+            'nome' : i.user.first_name[0:15],
+            'avatar' : avatar,
             'moto' : moto,
             'cota' : cota,
             'visita' : visita,
@@ -590,6 +605,10 @@ def list_cidade(request, regiao, dia,mes,ano):
             cota = 0
 
         # PEGA DESEMPENHO DA CIDADE
+        try:
+            TotalMensalMoto2019.objects.get(cidade = cidade.nome , mes=mes)
+        except TotalMensalMoto2019.DoesNotExist:
+            print(f'{cidade.nome} NÃO EXISTE NA TABELA TOTALMENSAL')
         obj_desempenho = TotalMensalMoto2019.objects.get(cidade = cidade.nome , mes=mes)
         total_mensal_meta = obj_desempenho.qtd
         
@@ -5092,3 +5111,48 @@ def user_detail(request):
         'avatar': perfil.avatar.url,
     }
     return Response(context)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def new_user(request):
+    
+    data = json.loads(request.body.decode('utf-8'))
+    print(data)
+    list_cidade = []
+    for x in data['cidade']:
+        list_cidade.append(x)
+        
+    print(list_cidade)
+    #checa se já tem cadastro
+    try:
+        Perfil.objects.get(cpf = data['cpf'])
+    except Perfil.DoesNotExist:
+        cria_user = User()
+        cria_user.username = data['cpf']
+        cria_user.first_name = data['nome']
+        cria_user.save()
+        print('salvou usuario')
+
+
+        obj_user = User.objects.get(username=data['cpf'])
+        ### fazendo perfil
+        perfil = Perfil()
+        perfil.cargo = data['cargo']
+        perfil.usuario = obj_user
+        perfil.regiao = data['regiao']
+        perfil.cpf = data['cpf']
+        perfil.avatar = 'https://pbs.twimg.com/profile_images/444875479/logo_James_Motoshop_img.jpg'
+        perfil.save()
+        print('salvou perfil')
+
+        for i in list_cidade:
+            equipe = Equipe()
+            equipe.user = obj_user
+            equipe.perfil = Perfil.objects.get(cpf = data['cpf'])
+            equipe.cidade = Cidade.objects.get(nome = i)
+            equipe.save()
+
+        return Response('USUARIO CRIADO COM SUCESSO!')        
+    else:
+        return HttpResponse('Unauthorized', status=401)
+        

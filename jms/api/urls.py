@@ -29,4 +29,5 @@ urlpatterns = [
     path('login/', obtain_jwt_token),
     path('refresh-token/', refresh_jwt_token),
     path('user/', user_detail),
+    path('new-user/', new_user),
 ]
