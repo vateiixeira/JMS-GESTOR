@@ -342,7 +342,7 @@ def desempenho_regiao_equipe(request, regiao,id,dia,mes,ano):
 
         # ACRESCENTA URL DEFAULT PARA NAO DA CONFLITO COM USUARIO SEM AVATAR
         if i.avatar is None:
-            avatar = 'https://fastly.4sqi.net/img/general/600x600/15RKT9R_ASX1-9rLJ7Pdf9vo0UYrWVA2-igMBuGiDzw.jpg'
+            avatar = 'https://pbs.twimg.com/profile_images/2940356126/36126576a21e1e8899dec2359ed395f8.jpeg'
         else:
             avatar = i.avatar.url
         
@@ -396,7 +396,7 @@ def desempenhoCidade(request, cidade, dia,mes,ano):
 
         # ACRESCENTA URL DEFAULT PARA NAO DA CONFLITO COM USUARIO SEM AVATAR
         if i.perfil.avatar is None:
-            avatar = 'https://fastly.4sqi.net/img/general/600x600/15RKT9R_ASX1-9rLJ7Pdf9vo0UYrWVA2-igMBuGiDzw.jpg'
+            avatar = 'https://pbs.twimg.com/profile_images/2940356126/36126576a21e1e8899dec2359ed395f8.jpeg'
         else:
             avatar = i.perfil.avatar.url
         
@@ -5141,7 +5141,7 @@ def new_user(request):
         perfil.usuario = obj_user
         perfil.regiao = data['regiao']
         perfil.cpf = data['cpf']
-        perfil.avatar = 'https://pbs.twimg.com/profile_images/444875479/logo_James_Motoshop_img.jpg'
+        perfil.avatar = 'https://pbs.twimg.com/profile_images/2940356126/36126576a21e1e8899dec2359ed395f8.jpeg'
         perfil.save()
        # print('salvou perfil')
 
