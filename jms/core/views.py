@@ -669,3 +669,11 @@ def retira_ponto_cpf():
         cpf = cpf.replace('-','')
         i.save()
         print('salvo')
+
+def att_cpf_moto(request):
+    template = 'limpo.html'
+    cota = Cota.objects.distinct('Cpf_Vendedor')
+    for i in cota:
+        moto = Moto.objects.get(Vendedor__startswith=i.Nome_Vendedor)
+        print(moto.Vendedor)
+    return render(reques,template)

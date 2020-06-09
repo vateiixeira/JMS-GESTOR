@@ -22,7 +22,8 @@ urlpatterns = [
     path('atualiza/cidade/cota', atualiza_cidade_cota, name='atualiza_cidade_cota'),
     path('atualiza/cidade/moto', atualiza_cidade_moto, name='atualiza_cidade_moto'),
     path('atualiza/cidade/cota/outros', atualiza_cidade_cota_outro, name='atualiza_cidade_cota_outro'),
-    path('cria/moto/tudo', cria_moto_tudo, name='cria_moto_tudo')
+    path('cria/moto/tudo', cria_moto_tudo, name='cria_moto_tudo'),
+    path('att/cpf/moto',att_cpf_moto, name='att_cpf_moto')
 ]
 
 if settings.DEBUG:

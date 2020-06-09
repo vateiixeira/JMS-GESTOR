@@ -318,7 +318,7 @@ def desempenho_regiao_equipe(request, regiao,id,dia,mes,ano):
         list_cidades.append(i.nome)
 
 
-    equipe = Perfil.objects.filter(regiao=regiao)
+    equipe = Perfil.objects.filter(regiao=regiao, cargo = 'VENDEDOR')
     
     equipe_dict = {}
     count = 1
