@@ -4029,7 +4029,6 @@ def analitico(request,dia,mes,ano):
     else:
         vendedores = ''
     
-
     if modelos == '' and cidades == '':
         # PEGA TODAS AS CIDADES DA REGIAO PARA APLICAR NO PORRA_TOTAL E JOGAR NOS TOTTAIS QUANTIDADE E PORCENTAGEM
         vendedor_obj = Perfil.objects.get(cpf = vendedores[0])
@@ -4071,6 +4070,16 @@ def analitico(request,dia,mes,ano):
         }
         QUERY = f'Vendedor_cpf__in = {vendedores}, Municipio__in = {cidades}'
         QUERY_TOTALIZADORES = f'Vendedor_cpf__in = {vendedores}, Municipio__in = {cidades}'
+    elif cidades == '' and vendedores == '':
+        porra = {
+             'Veiculo__in' : modelos
+        }
+        porra_total = {
+             'Veiculo__in' : modelos
+        }
+        QUERY = f'Veiculo__in = {modelos}'
+        QUERY_TOTALIZADORES = f'NENHUM'
+        print('MOTO SOZINHA')
     elif cidades == '':
         porra = {
             'Vendedor_cpf__in' : vendedores, 
@@ -4080,14 +4089,8 @@ def analitico(request,dia,mes,ano):
             'Vendedor_cpf__in' : vendedores, 
         }
         QUERY = f'Vendedor_cpf__in = {vendedores}, Veiculo__in = {modelos}'
-        QUERY_TOTALIZADORES = f'Vendedor_cpf__in = {vendedores}'  
-    elif cidades == '' and vendedores == '':
-        porra = {
-             'Veiculo__in' : modelos
-        }
-        porra_total = None
-        QUERY = f'Veiculo__in = {modelos}'
-        QUERY_TOTALIZADORES = f'NENHUM'
+        QUERY_TOTALIZADORES = f'Vendedor_cpf__in = {vendedores}' 
+        print('corre aqui maisa mel') 
     elif vendedores == '':
         porra = {
             'Municipio__in' : cidades,
