@@ -600,3 +600,72 @@ def cria_usuarios(request):
     template = '404.html'
     return render(request,template)
 
+def cria_moto_tudo(request):
+
+    
+    list_avatar = [ "https://www.honda.com.br/motos/sites/hda/files/styles/mobile_640x480/public/2019-10/xre-300-preta-1920x980.jpg",
+                    "https://img.olx.com.br/images/12/120822024294040.jpg",
+                    "https://www.honda.com.br/motos/sites/hda/files/styles/mobile_768x460/public/2018-10/crf250_lateral.jpg?itok=Jx0jae5G",
+                    "https://www.honda.com.br/motos/sites/hda/files/styles/mobile_768x460/public/2020-01/06_2.jpg?itok=ZJdbkeXV",
+                    "https://www.cabralmotor.com.br/wp-content/uploads/CG160FAN_LAT_VERMELHA-600x600.jpg",
+                    "https://www.honda.com.br/motos/sites/hda/files/styles/mobile_768x460/public/2019-09/cb-twister3.jpg",
+                    "https://www.honda.com.br/motos/sites/hda/files/styles/mobile_768x460/public/2020-02/01_1.jpg",
+                    "https://www.cabralmotor.com.br/wp-content/uploads/TWISTER_34F_VERMELHO.jpg",
+                    "https://www.honda.com.br/motos/sites/hda/files/styles/mobile_768x460/public/2019-12/vermelha34.jpg",
+                    "https://ddccctl8fxsqn.cloudfront.net/content/static/images/prod/2019-03/pop110i_galeria_555x372_branca_3_4_0.png",
+                    "https://www.cabralmotor.com.br/wp-content/uploads/TITAN160_34F-VERMELHO-600x600.jpg",
+                    "https://www.honda.com.br/motos/sites/hda/files/styles/mobile_768x460/public/2016-12/visao_04_2.jpg",
+                    "https://www.honda.com.br/motos/sites/hda/files/styles/mobile_768x460/public/2019-10/biz110i-vermelho-detalhe5_0.jpg",
+                    "https://www.honda.com.br/motos/sites/hda/files/styles/mobile_768x460/public/2019-12/pcx-cinza-sport-10.jpg",
+                    "https://www.honda.com.br/motos/sites/hda/files/styles/mobile_768x460/public/2020-01/01_1.jpg",
+                    "https://motos.inf.br/wp-content/uploads/2019/09/HONDA-CG-125I-CARGO-2020-1280x720.jpg",
+                    "https://img1.static.reweb.io/tiny/0/0/dealers.rewebmkt.com/images/20170927070853-1-Vermelha.png",
+                    "https://www.honda.com.br/motos/sites/hda/files/styles/mobile_768x460/public/2019-05/corte-3.jpg",
+                    "https://s2.glbimg.com/tUjmcba5L34D4ybTfKZ_vLQnI0M=/0x0:1920x1311/1008x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2019/3/0/OujBAASFG0Hbdx9yvqxQ/cg-160-titan-edicao-especial-25-anos-5.jpg",
+                    "https://www.cabralmotor.com.br/wp-content/uploads/TITAN160_34F-VERMELHO-600x600.jpg",
+                    "https://www.honda.com.br/motos/sites/hda/files/2019-10/nxr-160-bros-vermelha.png",
+                    "https://img.olx.com.br/images/93/932001011512144.jpg",
+                    "https://www.honda.com.br/motos/sites/hda/files/styles/mobile_768x460/public/2019-08/Start%20Cinza-%2034%20FD.jpg" ,
+                    ]
+    list_nome = [   "XRE 300 ABS",
+                    "SH 150I",
+                    "CRF 250F",
+                    "XRE 190",
+                    "CG 160 FAN",
+                    "CB 250F TWISTER ABS",
+                    "NXR 160 BROS ESDD",
+                    "CB 250F TWISTER STD",
+                    "ELITE 125",
+                    "POP 110I",
+                    "CG 160 TITAN",
+                    "CRF 230F",
+                    "BIZ 110I",
+                    "PCX 150",
+                    "CB500X ABS",
+                    "CG 125I CARG",
+                    "CG 125I FAN",
+                    "CG 160 CARGO",
+                    "CG 160 TITAN EDICAO ESPECIAL 25 ANOS",
+                    "CG TITAN",
+                    "NXR 160 BROS",
+                    "BIZ 125",
+                    "160 START",
+                    ]
+
+    for i in range(0,len(list_nome)):
+        obj = MotoPerfil()
+        obj.nome = list_nome[i]
+        obj.avatar = list_avatar[i]
+        obj.save()
+
+    template = 'limpo.html'
+    return render(request,template)
+
+def retira_ponto_cpf():
+    obj = Perfil.objects.all()
+    for i in obj:
+        cpf = i.cpf
+        cpf = cpf.replace('.','')
+        cpf = cpf.replace('-','')
+        i.save()
+        print('salvo')

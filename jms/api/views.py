@@ -329,8 +329,8 @@ def desempenho_regiao_equipe(request, regiao,id,dia,mes,ano):
         nome_vendedor = nome_vendedor.upper()
 
         cpf = i.cpf
-        moto = Moto.objects.filter(Vendedor__contains = nome_vendedor, Municipio__in = list_cidades, Data=f'{ano}-{mes}-{dia}').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
-        cota = Cota.objects.filter(Nome_Vendedor__contains = nome_vendedor,Municipio__in = list_cidades, Data_da_Venda=f'{ano}-{mes}-{dia}').count()
+        moto = Moto.objects.filter(Vendedor_cpf = cpf, Municipio__in = list_cidades, Data=f'{ano}-{mes}-{dia}').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+        cota = Cota.objects.filter(Cpf_Vendedor = cpf,Municipio__in = list_cidades, Data_da_Venda=f'{ano}-{mes}-{dia}').count()
         visita = 23
 
         
