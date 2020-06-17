@@ -23,7 +23,8 @@ urlpatterns = [
     path('atualiza/cidade/moto', atualiza_cidade_moto, name='atualiza_cidade_moto'),
     path('atualiza/cidade/cota/outros', atualiza_cidade_cota_outro, name='atualiza_cidade_cota_outro'),
     path('cria/moto/tudo', cria_moto_tudo, name='cria_moto_tudo'),
-    path('att/cpf/moto',att_cpf_moto, name='att_cpf_moto')
+    path('att/cpf/moto',att_cpf_moto, name='att_cpf_moto'),
+    path('remove/ponto/cpf',retira_ponto_cpf, name='retira_ponto_cpf')
 ]
 
 if settings.DEBUG:

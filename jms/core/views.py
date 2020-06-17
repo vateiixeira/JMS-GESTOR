@@ -661,7 +661,7 @@ def cria_moto_tudo(request):
     template = 'limpo.html'
     return render(request,template)
 
-def retira_ponto_cpf():
+def retira_ponto_cpf(request):
     obj = Perfil.objects.all()
     for i in obj:
         cpf = i.cpf
@@ -669,6 +669,7 @@ def retira_ponto_cpf():
         cpf = cpf.replace('-','')
         i.save()
         print('salvo')
+    return Response('ok')
 
 def att_cpf_moto(request):
     template = 'limpo.html'

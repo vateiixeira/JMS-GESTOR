@@ -5159,3 +5159,167 @@ def new_user(request):
     else:
         return HttpResponse('Unauthorized', status=401)
         
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def list_dados_regiao(request, regiao):
+    cidade_list = []
+    cidades = Cidade.objects.filter(regiao=regiao)
+    for x in cidades:
+        cidade_list.append(x.nome)
+    
+    vendedor_list = []
+    perfil = Perfil.objects.filter(regiao = regiao)
+    for x in perfil:
+        vendedor_list.append(str(x.usuario.first_name))
+
+    context = {
+        'cidade' : cidade_list,
+        'vendedor': vendedor_list
+    }
+    return Response(context)
+
+        
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def previsto_sazonalidade_cidade(request, cidade,valor):
+    ano = 2019
+
+    obj_cidade = Cidade.objects.get(nome = cidade)
+    cidades = Cidade.objects.filter(regiao = obj_cidade.regiao)
+    list_cidades = []
+    for x in cidades:
+        list_cidades.append(x.nome)
+
+    
+    lista = []
+    realizado_regiao_ano = Moto.objects.filter(Municipio = cidade, Data__gte = f'{ano}-1-1', Data__lte=f'{ano}-12-31').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+    if realizado_regiao_ano is None:
+        realizado_regiao_ano = 0
+
+    realizado_total_ano = Moto.objects.filter(Municipio__in = list_cidades, Data__gte = f'{ano}-1-1', Data__lte=f'{ano}-12-31').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+    #CALCULA A PARTICIPAÇÃO DA CIDADE 
+    participacao_cidade = realizado_regiao_ano / realizado_total_ano
+    print(f'REALIZADO TOTAL DO ANO: {realizado_total_ano}')
+    print(f'REALIZADO TOTAL CIDADE ANO: {realizado_regiao_ano}')
+    print(participacao_cidade)
+
+    # PEGA MEU VALOR GERAL E SUBTRAI DA PARTICIPAÇÃO DA CIDADE EM ESPECIFICO...
+    valor_cidade = valor * participacao_cidade
+    
+    previsto_list = []
+    i = 0
+    for mes in range(1,13):
+        i = i + 1
+        ultimo_dia_mes = calendar.monthrange(ano,mes)
+        realizado_cidade_mes = Moto.objects.filter(Municipio = cidade, Data__gte = f'{ano}-{mes}-1', Data__lte=f'{ano}-{mes}-{ultimo_dia_mes[1]}').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+        if realizado_cidade_mes is None or realizado_cidade_mes < 0 or realizado_regiao_ano == 0:
+            porcentagem_mes = 0
+            lista.append(0)
+            previsto = 0
+            previsto_list.append(previsto)
+            print(f'MES {i} TEVE 0 DE INDICADITO')
+
+        else:   
+            porcentagem_mes = (realizado_cidade_mes / realizado_regiao_ano) * 100                               
+            lista.append(float(format(porcentagem_mes, '.2f')))
+            previsto = valor_cidade * (realizado_cidade_mes / realizado_regiao_ano)
+            print(f'MES {i} TEVE {previsto} DE INDICADITO')
+            previsto_list.append(int(previsto))
+
+
+    return Response(previsto_list)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def previsto_sazonalidade_cidade_regiao(request, regiao,valor):
+    ano = 2019
+
+    cidades = Cidade.objects.filter(regiao = regiao)
+    list_cidades = []
+    for x in cidades:
+        list_cidades.append(x.nome)
+
+    context = {}
+    temp_dict = {}
+    for nameCidade in list_cidades:        
+        lista = []
+        realizado_regiao_ano = Moto.objects.filter(Municipio = nameCidade, Data__gte = f'{ano}-1-1', Data__lte=f'{ano}-12-31').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+        if realizado_regiao_ano is None:
+            realizado_regiao_ano = 0
+
+        realizado_total_ano = Moto.objects.filter(Municipio__in = list_cidades, Data__gte = f'{ano}-1-1', Data__lte=f'{ano}-12-31').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+        #CALCULA A PARTICIPAÇÃO DA CIDADE 
+        participacao_cidade = realizado_regiao_ano / realizado_total_ano
+        #print(f'REALIZADO TOTAL DO ANO: {realizado_total_ano}')
+        #print(f'REALIZADO TOTAL CIDADE ANO: {realizado_regiao_ano}')
+        #print(participacao_cidade)
+
+        # PEGA MEU VALOR GERAL E SUBTRAI DA PARTICIPAÇÃO DA CIDADE EM ESPECIFICO...
+        valor_cidade = valor * participacao_cidade
+        
+        previsto_list = []
+        i = 0
+        for mes in range(1,13):
+            i = i + 1
+            ultimo_dia_mes = calendar.monthrange(ano,mes)
+            realizado_cidade_mes = Moto.objects.filter(Municipio = nameCidade, Data__gte = f'{ano}-{mes}-1', Data__lte=f'{ano}-{mes}-{ultimo_dia_mes[1]}').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+            if realizado_cidade_mes is None or realizado_cidade_mes < 0 or realizado_regiao_ano == 0:
+                porcentagem_mes = 0
+                lista.append(0)
+                previsto = 0
+                previsto_list.append(previsto)
+            else:   
+                porcentagem_mes = (realizado_cidade_mes / realizado_regiao_ano) * 100                               
+                lista.append(float(format(porcentagem_mes, '.2f')))
+                previsto = valor_cidade * (realizado_cidade_mes / realizado_regiao_ano)
+                previsto_list.append(int(previsto))
+        temp_dict[nameCidade] = previsto_list
+    return Response(temp_dict)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def previsto_sazonalidade_vendedor_regiao(request, regiao,valor):
+    ano = 2019
+
+    vendedor = Perfil.objects.filter(regiao = regiao, cargo = 'VENDEDOR')
+    list_vendedor = []
+    for x in vendedor:
+        list_vendedor.append(x.cpf)
+
+    context = {}
+    temp_dict = {}
+    for objVendedor in vendedor:        
+        lista = []
+        realizado_regiao_ano = Moto.objects.filter(Vendedor_cpf = objVendedor.cpf, Data__gte = f'{ano}-1-1', Data__lte=f'{ano}-12-31').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+        if realizado_regiao_ano is None:
+            realizado_regiao_ano = 0
+
+        realizado_total_ano = Moto.objects.filter(Vendedor_cpf__in = list_vendedor, Data__gte = f'{ano}-1-1', Data__lte=f'{ano}-12-31').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+        #CALCULA A PARTICIPAÇÃO DA CIDADE 
+        participacao_vendedor = realizado_regiao_ano / realizado_total_ano
+        print(f'----------{objVendedor.usuario.first_name}---------------')
+        print(f'REALIZADO TOTAL DO ANO: {realizado_total_ano}')
+        print(f'REALIZADO TOTAL VENDEDOR ANO: {realizado_regiao_ano}')
+        print(f'REALIZADO TOTAL VENDEDOR ANO: {participacao_vendedor}')
+
+        # PEGA MEU VALOR GERAL E SUBTRAI DA PARTICIPAÇÃO DA vendedor EM ESPECIFICO...
+        valor_vendedor = valor * participacao_vendedor
+        
+        previsto_list = []
+        i = 0
+        for mes in range(1,13):
+            i = i + 1
+            ultimo_dia_mes = calendar.monthrange(ano,mes)
+            realizado_cidade_mes = Moto.objects.filter(Vendedor_cpf = objVendedor.cpf, Data__gte = f'{ano}-{mes}-1', Data__lte=f'{ano}-{mes}-{ultimo_dia_mes[1]}').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+            if realizado_cidade_mes is None or realizado_cidade_mes < 0 or realizado_regiao_ano == 0:
+                porcentagem_mes = 0
+                lista.append(0)
+                previsto = 0
+                previsto_list.append(previsto)
+            else:   
+                porcentagem_mes = (realizado_cidade_mes / realizado_regiao_ano) * 100                               
+                lista.append(float(format(porcentagem_mes, '.2f')))
+                previsto = valor_vendedor * (realizado_cidade_mes / realizado_regiao_ano)
+                previsto_list.append(int(previsto))
+        temp_dict[objVendedor.usuario.first_name] = previsto_list
+    return Response(temp_dict)
