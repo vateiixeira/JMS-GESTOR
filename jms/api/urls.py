@@ -3,6 +3,7 @@ from django.urls import path
 from rest_framework_jwt.views import obtain_jwt_token
 from rest_framework_jwt.views import refresh_jwt_token
 from .views import *
+from ..planejado.views import *
 
 app_name = 'api'
 
@@ -22,14 +23,24 @@ urlpatterns = [
     path('produto/<str:modelo>/<int:dia>/<int:mes>/<int:ano>/<str:vendedor>/vendedor', produto_modelo_vendedor),
     path('produto/<str:modelo>/<int:dia>/<int:mes>/<int:ano>/<str:vendedor>/<str:cidade>', produto_modelo_vendedor_cidade),
     path('analitico/<int:dia>/<int:mes>/<int:ano>', analitico),
+    path('sazonalidade/list/<str:regiao>', list_sazonalidade_regiao),
     path('sazonalidade', sazonalidade),
     path('sazonalidade/<str:regiao>', sazonalidade_regiao),
     path('sazonalidade/modelo/<str:modelo>', sazonalidade_modelo),
     path('sazonalidade/cidade/<str:cidade>', sazonalidade_cidade),
     path('sazonalidade/vendedor/<str:vendedor>', sazonalidade_vendedor),
-    path('sazonalidade/previsao/<str:cidade>/<int:valor>', previsto_sazonalidade_cidade),
-    path('sazonalidade/previsao/regiao/<str:regiao>/<int:valor>', previsto_sazonalidade_cidade_regiao),
+    #path('sazonalidade/previsao/<str:cidade>/<int:valor>', previsto_sazonalidade_cidade),
+    #path('sazonalidade/previsao/regiao/<str:regiao>/<int:valor>', previsto_sazonalidade_cidade_regiao),
     path('sazonalidade/previsao/regiao/vendedor/<str:regiao>/<int:valor>', previsto_sazonalidade_vendedor_regiao),
+    path('previsao/regiao/<str:regiao>/<int:valor>', previsto_planejamento_regiao),
+    path('grava/sazonalidade/modelo/cidade', grava_sazonalidade_modeloCidade),
+    path('grava/sazonalidade/modelo/vendedor', grava_sazonalidade_modeloVendedor),
+    path('grava/planejado/etapa1', grava_planejado_firstEtapa),
+    path('list/sazonalidade/modelo/cidade', list_sazonalidade_modeloCidade),
+    path('list/sazonalidade/modelo/vendedor', list_sazonalidade_modeloVendedor),
+    path('list/planejado/<str:modelo>/<str:cidade>', list_planejado_modeloCidade),
+    path('list/planejado/vendedor/<str:modelo>/<str:vendedor>', list_planejado_modeloVendedor),
+    path('remove_moto_cancel/', remove_moto_cancel),
     path('login/', obtain_jwt_token),
     path('refresh-token/', refresh_jwt_token),
     path('user/', user_detail),

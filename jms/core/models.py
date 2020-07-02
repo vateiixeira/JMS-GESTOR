@@ -198,6 +198,7 @@ class SazonalidadeRegiao(models.Model):
 
 class SazonalidadeModelo(models.Model):
     modelo = models.ForeignKey(MotoPerfil, on_delete=models.CASCADE)
+    regiao = models.CharField('Região', choices=REGIAO_CHOICE, max_length=100)
     mes = models.IntegerField("Mês")
     percentual = models.FloatField("Porcentual")
     vl_total_anual = models.IntegerField("Valor total no ano")

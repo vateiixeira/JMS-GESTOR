@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from jms.core.models import Equipe, MotoPerfil, Cidade
+from jms.core.models import *
 
 
 class EquipeSerializer(serializers.ModelSerializer):
@@ -20,7 +20,29 @@ class CidadeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cidade
         fields = '__all__'
+
+class SazonalidadeModeloSerializer(serializers.ModelSerializer):
+    modelo = serializers.StringRelatedField()
+    class Meta:
+        model = SazonalidadeModelo
+        exclude = ['id']
+
+class SazonalidadeVendedorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SazonalidadeVendedor
+        exclude = ['id']
+
+class SazonalidadeCidadeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SazonalidadeCidade
+        exclude = ['id']
+
+class SazonalidadeRegiaoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SazonalidadeRegiao
+        exclude = ['id']
     
+
 
 
 

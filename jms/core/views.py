@@ -678,3 +678,4 @@ def att_cpf_moto(request):
         moto = Moto.objects.get(Vendedor__startswith=i.Nome_Vendedor)
         print(moto.Vendedor)
     return render(reques,template)
+
