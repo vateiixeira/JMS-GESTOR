@@ -24,7 +24,9 @@ urlpatterns = [
     path('atualiza/cidade/cota/outros', atualiza_cidade_cota_outro, name='atualiza_cidade_cota_outro'),
     path('cria/moto/tudo', cria_moto_tudo, name='cria_moto_tudo'),
     path('att/cpf/moto',att_cpf_moto, name='att_cpf_moto'),
-    path('remove/ponto/cpf',retira_ponto_cpf, name='retira_ponto_cpf')
+    path('remove/ponto/cpf',retira_ponto_cpf, name='retira_ponto_cpf'),
+    path('coloca_zero_cpf_cota',coloca_zero_cpf_cota, name='coloca_zero_cpf_cota'),
+    path('padroniza_modelo_nome_cota',padroniza_modelo_nome_cota, name='padroniza_modelo_nome_cota'),
 ]
 
 if settings.DEBUG:

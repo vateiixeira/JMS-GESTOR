@@ -601,7 +601,6 @@ def cria_usuarios(request):
     return render(request,template)
 
 def cria_moto_tudo(request):
-
     
     list_avatar = [ "https://www.honda.com.br/motos/sites/hda/files/styles/mobile_640x480/public/2019-10/xre-300-preta-1920x980.jpg",
                     "https://img.olx.com.br/images/12/120822024294040.jpg",
@@ -677,5 +676,70 @@ def att_cpf_moto(request):
     for i in cota:
         moto = Moto.objects.get(Vendedor__startswith=i.Nome_Vendedor)
         print(moto.Vendedor)
-    return render(reques,template)
+    return render(request,template)
+
+def coloca_zero_cpf_cota(request):
+    template = 'limpo.html'
+    cota = Cota.objects.all()
+    for i in cota:
+        if len(i.Cpf_Vendedor) == 10:
+            cpf = f'0{i.Cpf_Vendedor}'
+            i.Cpf_Vendedor = cpf
+            i.save()
+            print('salvou', cpf)
+        elif len(i.Cpf_Vendedor) == 9:
+            cpf = f'00{i.Cpf_Vendedor}'
+            i.Cpf_Vendedor = cpf
+            i.save()
+            print('salvou', cpf)
+    return render(request,template)
+
+def padroniza_modelo_nome_cota(request):
+    template = 'limpo.html'
+    modelos = MotoPerfil.objects.all()
+    list_modelos = []
+    for x in modelos:
+        list_modelos.append(x.nome)
+    #print(list_modelos)
+    ### lista dos modelos
+    list_modelos = ['XRE 300 ABS', 'SH 150I', 'CRF 250F', 'XRE 190', 'CB 250F TWISTER ABS', 'NXR 160 BROS ESDD', 'ELITE 125', 'POP 110I',
+     'CRF 230F', 'BIZ 110I', 'PCX 150', 'CB500X ABS', 'CG 125I CARG', 'CG 125I FAN', 'CG 160 CARGO', 'CG 160 TITAN EDICAO ESPECIAL 25 ANOS', 
+     'NXR 160 BROS', 'BIZ 125', '160 START', 'CG 160 FAN', 'CG 160 TITAN', 'CB 250F TWISTER STD', 'CG TITAN']
+    
+    cota = Cota.objects.all().distinct('Modelo')
+    list_modelos_cota = []
+    for i in cota:
+        list_modelos_cota.append(i.Modelo)
+    
+    list_modelos_cota = [' START 160', 'AFRICA TWIN', 'BIZ 110I', 'BIZ 125', 'BROS 160', 'BROS160ESDD', 'CB 1000R', 'CB 500F ABS', 'CB 500X ABS', 'CB TWISTER', 
+    'CBR 650R', 'CBR650F 40+', 'CBR650F ABS', 'CRF 230F', 'CRF 250F', 'ELITE 125', 'FAN 125I', 'FAN160 ESDI', 'NC 750X ABS', 'PCX', 'POP 110I', 'TITAN160 EX', 
+    'TRX 420 FM', 'TWISTER ABS', 'XRE 190', 'XRE 300 ABS']
+
+    obj_cota = Cota.objects.all()
+    for z in obj_cota:
+        if z.Modelo == ' START 160':
+            z.Modelo = '160 START'
+        elif z.Modelo == 'BROS 160':
+            z.Modelo = 'NXR 160 BROS'
+        elif z.Modelo == 'BROS160ESDD':
+            z.Modelo = 'NXR 160 BROS ESDD'
+        elif z.Modelo == 'CB 500X ABS':
+            z.Modelo = 'CB500X ABS'
+        elif z.Modelo == 'CB TWISTER':
+            z.Modelo = 'CB 250F TWISTER STD'
+        elif z.Modelo == 'FAN 125I':
+            z.Modelo = 'CG 125I CARG'
+        elif z.Modelo == 'FAN160 ESDI':
+            z.Modelo = 'CG 160 FAN'
+        elif z.Modelo == 'PCX':
+            z.Modelo = 'PCX 150'
+        elif z.Modelo == 'TITAN160 EX':
+            z.Modelo = 'CG 160 TITAN'
+        elif z.Modelo == 'TWISTER ABS':
+            z.Modelo = 'CB 250F TWISTER ABS'
+        elif z.Modelo == 'TWISTER ABS':
+            z.Modelo = 'CB 250F TWISTER ABS'
+        print(z.Modelo)
+        z.save()
+    return render(request,template)
 

@@ -21,8 +21,25 @@ import json
 from django.http import HttpResponse
 from jms.account.models import REGIAO_CHOICE
 import math 
+from ..metas.models import CidadeModelo,VendedorModelo, VendedorModeloCota,CidadeModeloCota
+from ..planejado.models import FirstEtapa,FirstEtapaCota
 
+ANO_ATUAL = 2020
 
+list_meses_metas = {
+            1 : 'aplicado_jan',
+            2 : 'aplicado_fev',
+            3 : 'aplicado_mar',
+            4 : 'aplicado_abr',
+            5 : 'aplicado_mai',
+            6 : 'aplicado_jun',
+            7 : 'aplicado_jul',
+            8 : 'aplicado_ago',
+            9 : 'aplicado_sete',
+            10: 'aplicado_out',
+            11: 'aplicado_nov',
+            12: 'aplicado_dez'
+        }
 
 @api_view(['GET'])
 def desempenho_vendedor(request,vendedor,regiao,dia,mes,ano):
@@ -120,7 +137,6 @@ def desempenho_vendedor(request,vendedor,regiao,dia,mes,ano):
             porcen_desempenho_cota = 0
         elif total_mensal_cota == 0:
             porcen_desempenho_cota = 100
-            print(cidade.nome.encode('ascii', 'ignore'))
         else:
             porcen_desempenho_cota = acumulado_mes_cota * 100 / total_mensal_cota
 
@@ -247,7 +263,6 @@ def desempenho_modelo(request,modelo,regiao,dia,mes,ano):
             porcen_desempenho_cota = 0
         elif total_mensal_cota == 0:
             porcen_desempenho_cota = 100
-            print(cidade.nome.encode('ascii', 'ignore'))
         else:
             porcen_desempenho_cota = acumulado_mes_cota * 100 / total_mensal_cota
 
@@ -336,7 +351,63 @@ def desempenho_regiao_equipe(request, regiao,id,dia,mes,ano):
         cota = Cota.objects.filter(Cpf_Vendedor = cpf,Municipio__in = list_cidades, Data_da_Venda=f'{ano}-{mes}-{dia}').count()
         visita = 23
 
+        # PEGA DESEMPENHO DO VENDEDOR
+
+        list_meses = {
+            1 : 'aplicado_jan',
+            2 : 'aplicado_fev',
+            3 : 'aplicado_mar',
+            4 : 'aplicado_abr',
+            5 : 'aplicado_mai',
+            6 : 'aplicado_jun',
+            7 : 'aplicado_jul',
+            8 : 'aplicado_ago',
+            9 : 'aplicado_sete',
+            10: 'aplicado_out',
+            11: 'aplicado_nov',
+            12: 'aplicado_dez'
+        }
+
+        # ANO_TEMPORARIO, ALTERAR DEPOIS PARA PUXAR O ANO COERENTE COM O SISTEMA RODANDO
+        ano_temporario = 2020
+        try:
+            total_mensal_meta = VendedorModelo.objects.filter(vendedor = i , ano = ano_temporario).aggregate(Sum(list_meses[mes]))[f'{list_meses[mes]}__sum']
+        except VendedorModelo.DoesNotExist:
+            print(f'{nome_vendedor} NÃO EXISTE NA TABELA DE PLANEJAMENTO')    
+
+        total_mensal_meta = VendedorModelo.objects.filter(vendedor = i , ano = ano_temporario).aggregate(Sum(list_meses[mes]))[f'{list_meses[mes]}__sum']
+        total_mensal_meta_cota = VendedorModeloCota.objects.filter(vendedor = i , ano = ano_temporario).aggregate(Sum(list_meses[mes]))[f'{list_meses[mes]}__sum']
+        if total_mensal_meta is None:
+            print(i.usuario.first_name, 'NÃO POSSUI META')
+        #print(total_mensal_meta)
+
+        acumulado_mes = Moto.objects.filter(Vendedor_cpf = cpf, Municipio__in = list_cidades, Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+        acumulado_mes_cota = Cota.objects.filter(Cpf_Vendedor = cpf, Municipio__in = list_cidades, Data_da_Venda__lte=f'{ano}-{mes}-{dia}', Data_da_Venda__gte=f'{ano}-{mes}-1').count()
         
+        if total_mensal_meta == 0 or acumulado_mes is None or total_mensal_meta_cota == 0:
+            porcen_desempenho = 0
+            porcen_desempenho_cota = 0
+        else:
+            porcen_desempenho_cota = acumulado_mes_cota * 100 / total_mensal_meta_cota
+            porcen_desempenho = acumulado_mes * 100 / total_mensal_meta
+
+        if porcen_desempenho >= 100:
+            desempenho = 'success'
+            desempenho_cota = 'success'
+        elif 40 < porcen_desempenho < 99:
+            desempenho = 'warning'
+            desempenho_cota = 'warning'
+        else:
+            desempenho = 'error'  
+            desempenho_cota = 'error' 
+
+        if porcen_desempenho_cota >= 100:
+            desempenho_cota = 'success'
+        elif 40 < porcen_desempenho_cota < 99:
+            desempenho_cota = 'warning'
+        else: 
+            desempenho_cota = 'error'  
+
 
         if moto is None:
             moto = 0
@@ -356,6 +427,8 @@ def desempenho_regiao_equipe(request, regiao,id,dia,mes,ano):
             'cota' : cota,
             'visita' : visita,
             'cpf' : cpf,
+            'desempenho' : desempenho,
+            'desempenho_cota': desempenho_cota
         }
         equipe_dict[count] = new_dict
 
@@ -545,6 +618,58 @@ def desempenhoMotoRegiao(request,regiao, dia,mes,ano):
         # PEGA AS CIDADES DA REGIAO
         user = request.user
         perfil = Perfil.objects.get(usuario = user)
+
+        # esse ano vai pegar a variavel ano quando o sistema tiver rodando normal
+        ano_provisorio = 2020
+
+        nome_mes = {
+            1:'jan',
+            2:'fev',
+            3:'mar',
+            4:'abr',
+            5:'mai',
+            6:'jun',
+            7:'jul',
+            8:'ago',
+            9:'sete', 
+            10:'out',
+            11:'nov',
+            12:'dez'
+        }
+
+        # PEGA DESEMPENHO DA MOTO PARA REGIÃO
+        total_mensal_meta = FirstEtapa.objects.filter(regiao = regiao , ano = ano_provisorio, modelo = value).aggregate(Sum(nome_mes[mes]))[f'{nome_mes[mes]}__sum']
+        total_mensal_meta_cota = FirstEtapaCota.objects.filter(regiao = regiao , ano = ano_provisorio, modelo = value).aggregate(Sum(nome_mes[mes]))[f'{nome_mes[mes]}__sum']
+        
+
+        acumulado_mes_cota = Cota.objects.filter(Modelo = value.nome, Municipio__in = list_cidade, Data_da_Venda__lte=f'{ano}-{mes}-{dia}', Data_da_Venda__gte=f'{ano}-{mes}-1').count()
+        acumulado_mes = Moto.objects.filter(Veiculo = value.nome, Municipio__in = list_cidade, Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+        
+        ############## MOTO
+        if total_mensal_meta == 0 or acumulado_mes is None:
+            porcen_desempenho = 0
+        else:
+            porcen_desempenho = acumulado_mes * 100 / total_mensal_meta
+
+        if porcen_desempenho >= 100:
+            desempenho = 'success'
+        elif 40 < porcen_desempenho < 99:
+            desempenho = 'warning'
+        else:
+            desempenho = 'error'
+
+        ############## COTA
+        if total_mensal_meta_cota == 0 or acumulado_mes_cota is None:
+            porcen_desempenho_cota = 0
+        else:
+            porcen_desempenho_cota = acumulado_mes_cota * 100 / total_mensal_meta_cota
+
+        if porcen_desempenho_cota >= 100:
+            desempenho_cota = 'success'
+        elif 40 < porcen_desempenho_cota < 99:
+            desempenho_cota = 'warning'
+        else:
+            desempenho_cota = 'error'
         
         # if perfil.cargo == 'ADMIN':
         #     cidades = Cidade.objects.filter(regiao__in = ['JNB', 'JNR', 'SFC'])
@@ -577,6 +702,9 @@ def desempenhoMotoRegiao(request,regiao, dia,mes,ano):
             'cota' : cota,
             'area_moto' : area_moto,
             'area_cota' : area_cota,
+            'desempenho': desempenho,
+            'desempenho_cota': desempenho_cota,
+            'porcen_desempenho': f'{porcen_desempenho:.2f}'
         }
         context[contador] = new_dict
         contador = contador + 1
@@ -631,10 +759,30 @@ def list_cidade(request, regiao, dia,mes,ano):
             desempenho = 'error'
 
         # DESEMPENHO COTA
-        acumulado_mes_cota = Cota.objects.filter(Municipio = cidade.nome, Data_da_Venda__lte=f'{ano}-{mes}-{dia}', Data_da_Venda__gte=f'{ano}-{mes}-1').count()
-        total_mensal_cota = Cota.objects.filter(Municipio = cidade.nome, Data_da_Venda__lte=f'2019-{mes}-{ultimo_dia_mes[1]}', Data_da_Venda__gte=f'{ano}-{mes}-1').count()
+        list_meses = {
+            1:'aplicado_jan',
+            2:'aplicado_fev',
+            3:'aplicado_mar',
+            4:'aplicado_abr',
+            5:'aplicado_mai',
+            6:'aplicado_jun',
+            7:'aplicado_jul',
+            8:'aplicado_ago',
+            9:'aplicado_sete', 
+            10:'aplicado_out',
+            11:'aplicado_nov',
+            12:'aplicado_dez'
+        }
+        ano_temporario = 2020
+        total_mensal_cota = CidadeModeloCota.objects.filter(cidade = cidade , ano = ano_temporario).aggregate(Sum(list_meses[mes]))[f'{list_meses[mes]}__sum']
 
-        if acumulado_mes_cota is None:
+        acumulado_mes_cota = Cota.objects.filter(Municipio = cidade.nome, Data_da_Venda__lte=f'{ano}-{mes}-{dia}', Data_da_Venda__gte=f'{ano}-{mes}-1').count()
+        #total_mensal_cota = Cota.objects.filter(Municipio = cidade.nome, Data_da_Venda__lte=f'2019-{mes}-{ultimo_dia_mes[1]}', Data_da_Venda__gte=f'{ano}-{mes}-1').count()
+        print(acumulado_mes_cota, cidade.nome)
+        print(f'META 2020 = {total_mensal_cota}')
+        print('-----------------------------------------')
+
+        if acumulado_mes_cota is None or total_mensal_cota is None:
             porcen_desempenho_cota = 0
         elif total_mensal_cota == 0:
             porcen_desempenho_cota = 100            
@@ -4049,6 +4197,13 @@ def analitico(request,dia,mes,ano):
         }
         QUERY = f'Vendedor_cpf__in = {vendedores}, '
         QUERY_TOTALIZADORES = f'Vendedor_cpf__in = {vendedores}'
+        # PEGA A META DOS VENDEDORES 
+        query_vendedores = Perfil.objects.filter(cpf__in = vendedores)
+        meta = 0
+        for x in query_vendedores:
+            meta_obj = VendedorModelo.objects.filter(vendedor = x).aggregate(Sum(list_meses_metas[mes]))[f'{list_meses_metas[mes]}__sum']
+            print(x.id)
+            meta = meta_obj + meta
     elif modelos == '' and vendedores == '':
         # PEGA TODAS AS CIDADES DA REGIAO PARA APLICAR NO PORRA_TOTAL E JOGAR NOS TOTTAIS QUANTIDADE E PORCENTAGEM
         cidade_obj = Cidade.objects.get(nome = cidades[0])
@@ -4127,14 +4282,14 @@ def analitico(request,dia,mes,ano):
     #         .exclude(Cancelada = True).aggregate(Sum('Valor_da_Nota'))['Valor_da_Nota__sum']
     
 
-    result = executa(porra,porra_total,dia,mes,ano,modelos,cidades,vendedores)
+    result = executa(porra,porra_total,dia,mes,ano,modelos,cidades,vendedores, meta)
 
     context = {
         'str': result,
     }
     return Response(result)
 
-def executa(QUERY,QUERY_TOTALIZADORES,dia,mes,ano,modelos,cidades,vendedores):
+def executa(QUERY,QUERY_TOTALIZADORES,dia,mes,ano,modelos,cidades,vendedores, meta = 0):
         #QUERY_TOTALIZADORES = QUERY - MODELO
 
         list_vendedores = []
@@ -4247,7 +4402,7 @@ def executa(QUERY,QUERY_TOTALIZADORES,dia,mes,ano,modelos,cidades,vendedores):
                 print(f'Valor: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_banco_honda')
         
         
-        cnh_obj = Moto.objects.filter(**QUERY, Sub_Forma_Fabrica = 'CNH - SEM ALIENAÇaO', Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
+        cnh_obj = Moto.objects.filter(**QUERY, Sub_Forma_Fabrica = 'CNH - SEM ALIENAÇÃO', Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
         filtro_cnh = cnh_obj.filter(**QUERY, Chassi__in = list_devolucao_chassi, Valor_da_Nota__in=list_devolucao_vlnota).distinct('Chassi')
         list_cnh_exclude = []
         if filtro_cnh.count() == 0:
@@ -4261,7 +4416,7 @@ def executa(QUERY,QUERY_TOTALIZADORES,dia,mes,ano,modelos,cidades,vendedores):
                     (f'Nota {i.Nota_Fiscal} ja existe na lista.. Nao será adicionada')
                 print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} //Numero: {i.Nota_Fiscal} // Modalidade: filtro_cnh')
         
-        cnh2_obj = Moto.objects.filter(**QUERY, Sub_Forma_Fabrica = 'CNH - COM ALIENAÇaO', Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
+        cnh2_obj = Moto.objects.filter(**QUERY, Sub_Forma_Fabrica = 'CNH - COM ALIENAÇÃO', Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
         filtro_cnh2 = cnh2_obj.filter(**QUERY, Chassi__in = list_devolucao_chassi, Valor_da_Nota__in=list_devolucao_vlnota).distinct('Chassi')
         list_cnh2_exclude = []
         if filtro_cnh2.count() == 0:
@@ -4304,7 +4459,7 @@ def executa(QUERY,QUERY_TOTALIZADORES,dia,mes,ano,modelos,cidades,vendedores):
                     (f'Nota {i.Nota_Fiscal} ja existe na lista.. Nao será adicionada')
                 print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_brasil')
 
-        cartao_obj = Moto.objects.filter(**QUERY, Sub_Forma_Fabrica = 'CARTaO', Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
+        cartao_obj = Moto.objects.filter(**QUERY, Sub_Forma_Fabrica = 'CARTÃO', Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
         filtro_cartao = cartao_obj.filter(**QUERY, Chassi__in = list_devolucao_chassi, Valor_da_Nota__in=list_devolucao_vlnota).distinct('Chassi')
         list_cartao_exclude = []
         if filtro_cartao.count() == 0:
@@ -4332,7 +4487,7 @@ def executa(QUERY,QUERY_TOTALIZADORES,dia,mes,ano,modelos,cidades,vendedores):
                     (f'Nota {i.Nota_Fiscal} ja existe na lista.. Nao será adicionada')
                 print(f'Nota: {i.Valor_da_Nota} /// {i.Chassi} // Numero: {i.Nota_Fiscal} // Modalidade: filtro_troca')
 
-        cdcp_obj = Moto.objects.filter(**QUERY, Sub_Forma_Fabrica__in = ['James CDCP Sem alienaçao', 'JAMES CDCP'], Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
+        cdcp_obj = Moto.objects.filter(**QUERY, Sub_Forma_Fabrica__in = ['James CDCP Sem alienação', 'JAMES CDCP'], Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True)
         filtro_cdcp = cdcp_obj.filter(**QUERY, Chassi__in = list_devolucao_chassi, Valor_da_Nota__in=list_devolucao_vlnota).distinct('Chassi')
         list_troca_exclude = []
         if filtro_cdcp.count() == 0:
@@ -4759,6 +4914,7 @@ def executa(QUERY,QUERY_TOTALIZADORES,dia,mes,ano,modelos,cidades,vendedores):
             'vendedores' : list_vendedores,
             'cidades' : list_cidades,
             'modelos' : list_modelos,
+            'meta' : meta,
             'lucratividade_formas_pgto' : lucratividade_dict,
             'realizado_modelo': locale.currency(realizado_modelo, grouping=True, symbol=None),
             'realizado_total': locale.currency(realizado_total, grouping=True, symbol=None),
@@ -4988,6 +5144,185 @@ def sazonalidade(request):
         'modelo' : modelo,
     }
     return Response(context)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def sazonalidade_cota(request):
+
+
+    def cidade(ano):
+        obj_cidade = Cidade.objects.all()
+        realizado_cidade_dict = dict()
+        realizado_cidade_mes_dict = dict()
+        total_dict = dict()
+        for x in obj_cidade:
+
+            realizado_cidade_ano = Cota.objects.filter(Municipio = x.nome, Data_da_Venda__gte = f'{ano}-1-1', Data_da_Venda__lte=f'{ano}-12-31').exclude(Status = 'CANCELADO').count()
+            if realizado_cidade_ano is None:
+                realizado_cidade_ano = 0
+
+            realizado_cidade_mes_dict['anual'] = realizado_cidade_ano
+
+            for mes in range(1,13):
+                instancia = SazonalidadeCidadeCota()
+                instancia.cidade = x
+                instancia.ano_base = ano
+                instancia.vl_total_anual = realizado_cidade_ano
+                ultimo_dia_mes = calendar.monthrange(ano,mes)
+                instancia.mes = mes
+                realizado_cidade_mes = Cota.objects.filter(Municipio = x.nome, Data_da_Venda__gte = f'{ano}-{mes}-1', Data_da_Venda__lte=f'{ano}-{mes}-{ultimo_dia_mes[1]}').exclude(Status = 'CANCELADO').count()
+                if realizado_cidade_mes is None or realizado_cidade_mes <= 0 or realizado_cidade_ano <= 0 or realizado_cidade_ano is None:
+                    porcentagem_mes = 0
+                    realizado_cidade_mes_dict[mes] = 0
+                    instancia.percentual = 0
+                else:
+                    #porcentagem_mes = realizado_cidade_mes / realizado_cidade_ano     
+                    porcentagem_mes = (realizado_cidade_mes / realizado_cidade_ano) * 100                               
+                    realizado_cidade_mes_dict[mes] = float(format(porcentagem_mes, '.2f'))
+                    realizado_cidade_dict[x.nome] = realizado_cidade_mes_dict
+
+                    instancia.percentual = float(format(porcentagem_mes, '.2f'))
+                instancia.save()
+            realizado_cidade_mes_dict = {}
+        return realizado_cidade_dict            
+
+    def vendedor(ano):
+        obj_vendedor = Cota.objects.distinct('Cpf_Vendedor')
+        realizado_vendedor_dict = dict()
+        realizado_vendedor_mes_dict = dict()
+        total_dict = dict()
+        for x in obj_vendedor:
+
+            realizado_vendedor_ano = Cota.objects.filter(Cpf_Vendedor = x.Cpf_Vendedor, Data_da_Venda__gte = f'{ano}-1-1', Data_da_Venda__lte=f'{ano}-12-31').exclude(Status = 'CANCELADO').count()
+            if realizado_vendedor_ano is None:
+                realizado_vendedor_ano = 0
+
+            realizado_vendedor_mes_dict['anual'] = realizado_vendedor_ano
+            
+            for mes in range(1,13):
+                instancia = SazonalidadeVendedorCota()
+                instancia.vendedor_nome = x.Nome_Vendedor
+                instancia.vendedor_cpf = x.Cpf_Vendedor
+                instancia.ano_base = ano
+                instancia.vl_total_anual = realizado_vendedor_ano
+                ultimo_dia_mes = calendar.monthrange(ano,mes)
+                instancia.mes = mes
+                realizado_cidade_mes = Cota.objects.filter(Cpf_Vendedor = x.Cpf_Vendedor, Data_da_Venda__gte = f'{ano}-{mes}-1', Data_da_Venda__lte=f'{ano}-{mes}-{ultimo_dia_mes[1]}').exclude(Status = 'CANCELADO').count()
+                if realizado_cidade_mes is None or realizado_cidade_mes < 0:
+                    porcentagem_mes = 0
+                    realizado_vendedor_mes_dict[mes] = 0
+
+                    instancia.percentual = 0
+                else:
+                    #porcentagem_mes = realizado_cidade_mes / realizado_vendedor_ano     
+                    porcentagem_mes = (realizado_cidade_mes / realizado_vendedor_ano) * 100                               
+                    realizado_vendedor_mes_dict[mes] = float(format(porcentagem_mes, '.2f'))
+                    realizado_vendedor_dict[x.Nome_Vendedor] = realizado_vendedor_mes_dict
+
+                    instancia.percentual = float(format(porcentagem_mes, '.2f'))
+        
+                instancia.save()            
+            realizado_vendedor_mes_dict = {}
+        return realizado_vendedor_dict
+
+    def regiao(ano):
+        obj_regiao = Cidade.objects.distinct('regiao')
+        realizado_regiao_dict = dict()
+        realizado_regiao_mes_dict = dict()
+        total_dict = dict()
+        for x in obj_regiao:
+            list_cidades_regiao = list(Cidade.objects.filter(regiao = x.regiao))
+            realizado_regiao_ano = Cota.objects.filter(Municipio__in = list_cidades_regiao, Data_da_Venda__gte = f'{ano}-1-1', Data_da_Venda__lte=f'{ano}-12-31').exclude(Status = 'CANCELADO').count()
+            if realizado_regiao_ano is None:
+                realizado_regiao_ano = 0
+
+            realizado_regiao_mes_dict['anual'] = realizado_regiao_ano
+            
+            for mes in range(1,13):
+                instancia = SazonalidadeRegiaoCota()
+                instancia.regiao = x.regiao  
+                instancia.ano_base = ano
+                instancia.vl_total_anual = realizado_regiao_ano
+                ultimo_dia_mes = calendar.monthrange(ano,mes)
+                instancia.mes = mes
+                realizado_cidade_mes = Cota.objects.filter(Municipio__in = list_cidades_regiao, Data_da_Venda__gte = f'{ano}-{mes}-1', Data_da_Venda__lte=f'{ano}-{mes}-{ultimo_dia_mes[1]}').exclude(Status = 'CANCELADO').count()
+                if realizado_cidade_mes is None or realizado_cidade_mes < 0:
+                    porcentagem_mes = 0
+                    realizado_regiao_mes_dict[mes] = 0
+                    instancia.percentual = 0
+                else:
+                    #porcentagem_mes = realizado_cidade_mes / realizado_regiao_ano     
+                    porcentagem_mes = (realizado_cidade_mes / realizado_regiao_ano) * 100                               
+                    realizado_regiao_mes_dict[mes] = float(format(porcentagem_mes, '.2f'))
+                    realizado_regiao_dict[x.regiao] = realizado_regiao_mes_dict
+
+                    instancia.percentual = float(format(porcentagem_mes, '.2f'))
+        
+                instancia.save()            
+            realizado_regiao_mes_dict = {}
+        return realizado_regiao_dict
+
+    def modelo(ano):
+        obj_modelo = MotoPerfil.objects.distinct('nome')
+        realizado_modelo_dict = dict()
+        realizado_modelo_mes_dict = dict()
+        total_dict = dict()
+        for x in obj_modelo:
+
+            #LOOP PARA GRAVAR A SAZONALIDADE DO MODELO ESPECIFICO EM TODAS AS REGIÕES
+            for regiao in REGIAO_CHOICE:
+                # COLOCA AS CIDADES DENTRO DA REGIAO
+                cidades = Cidade.objects.filter(regiao = regiao[0])
+                list_cidade = []
+                for cidade in cidades:
+                    list_cidade.append(cidade.nome)
+
+                realizado_regiao_ano = Cota.objects.filter(Municipio__in = list_cidade, Modelo = x.nome, Data_da_Venda__gte = f'{ano}-1-1', Data_da_Venda__lte=f'{ano}-12-31').exclude(Status = 'CANCELADO').count()
+                if realizado_regiao_ano is None:
+                    realizado_regiao_ano = 0
+
+                realizado_modelo_mes_dict['anual'] = realizado_regiao_ano
+                
+                for mes in range(1,13):
+                    instancia = SazonalidadeModeloCota()
+                    instancia.regiao = regiao[0]
+                    instancia.modelo = x
+                    instancia.ano_base = ano
+                    instancia.vl_total_anual = realizado_regiao_ano
+                    ultimo_dia_mes = calendar.monthrange(ano,mes)
+                    instancia.mes = mes
+                    realizado_modelo_mes = Cota.objects.filter(Municipio__in = list_cidade, Modelo = x.nome, Data_da_Venda__gte = f'{ano}-{mes}-1', Data_da_Venda__lte=f'{ano}-{mes}-{ultimo_dia_mes[1]}').exclude(Status = 'CANCELADO').count()
+                    if realizado_modelo_mes is None or realizado_modelo_mes < 0 or realizado_regiao_ano == 0:
+                        porcentagem_mes = 0
+                        realizado_modelo_mes_dict[mes] = 0
+                        instancia.percentual = 0
+                    else:
+                        #porcentagem_mes = realizado_modelo_mes / realizado_regiao_ano     
+                        porcentagem_mes = (realizado_modelo_mes / realizado_regiao_ano) * 100                               
+                        realizado_modelo_mes_dict[mes] = float(format(porcentagem_mes, '.2f'))
+                        realizado_modelo_dict[x.nome] = realizado_modelo_mes_dict
+
+                        instancia.percentual = float(format(porcentagem_mes, '.2f'))
+            
+                    instancia.save()            
+                realizado_modelo_mes_dict = {}
+        return realizado_modelo_dict
+
+
+    ano_base = 2019
+    #vendedor = vendedor(ano_base)
+    #cidade = cidade(ano_base)
+    #regiao = regiao(ano_base)
+    modelo = modelo(ano_base)
+
+
+    context = {
+        'ok'
+        #'vendedor' : vendedor,
+        # 'cidade' : cidade,
+        # 'regiao' : regiao,
+         'modelo' : modelo,
+    }
+    return Response(context)
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -5202,6 +5537,150 @@ def previsto_planejamento_regiao(request,regiao,valor):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+def previsto_planejamento_regiao_cota(request,regiao,valor):
+
+    def cidade(regiao,valor):
+        obj_cidade = Cidade.objects.filter(regiao=regiao)
+        realizado_cidade_dict = dict()
+        realizado_cidade_mes_dict = dict()
+        total_dict = dict()
+
+        #realizado_total_ano = SazonalidadeCidade.objects.filter(cidade__in = obj_cidade).aggregate(Sum('vl_total_anual'))['vl_total_anual__sum']
+        query = SazonalidadeCidadeCota.objects.filter(cidade__in = obj_cidade).distinct('cidade')
+        realizado_total_ano =0
+        for x in query:
+            realizado_total_ano = realizado_total_ano + x.vl_total_anual
+        
+        for x in obj_cidade:
+            somameses = 0
+            for mes in range(1,13):
+                sazonalidade = SazonalidadeCidadeCota.objects.get(cidade_id = x.id, mes = mes)
+                realizado_cidade_ano = sazonalidade.vl_total_anual
+                #CALCULA A PARTICIPAÇÃO DA CIDADE 
+                participacao_cidade = realizado_cidade_ano / realizado_total_ano
+
+                # PEGA MEU VALOR GERAL E SUBTRAI DA PARTICIPAÇÃO DA CIDADE EM ESPECIFICO...
+                valor_cidade = round(valor * participacao_cidade)
+        
+                
+                realizado_cidade_mes = SazonalidadeCidadeCota.objects.only('percentual').get(cidade = x, mes = mes).percentual 
+                previsto =  round((realizado_cidade_mes /100 ) * valor_cidade)
+                realizado_cidade_mes_dict[mes] = previsto
+                realizado_cidade_dict[x.nome] = realizado_cidade_mes_dict
+                
+                somameses = somameses + previsto
+
+                # print('----'*30)
+                # print(x.nome)
+                # print(f'REALIZADO_TOTAL_ANO_TODOS : {realizado_total_ano}')
+                # print(f'REALIZADO_CIDADE_ANO : {realizado_cidade_ano}')
+                # print(f'PARTICIPACAO DA CIDADE NO ANO : {participacao_cidade}')
+                # print(f'PREVISTO PARA O ANO : {valor_cidade}')
+                # print(f'SOMA PREVISTO PARA O ANO : {somameses}')
+                # print(f'PREVISTO PARA O MES : {previsto}')
+                # print('----'*30)
+            realizado_cidade_mes_dict['soma_previsto_anual'] = somameses
+            realizado_cidade_mes_dict['previsto_anual'] = valor_cidade
+            realizado_cidade_mes_dict = {}
+        return realizado_cidade_dict            
+
+    def vendedor(regiao,valor):
+        obj_vendedor = Perfil.objects.filter(regiao = regiao).exclude(cargo__in = ['ADMIN', 'SUPERVISOR', 'GERENTE'])
+        realizado_vendedor_dict = dict()
+        realizado_vendedor_mes_dict = dict()
+        total_dict = dict()
+
+        list_cpf = []
+        for y in obj_vendedor:
+            list_cpf.append(y.cpf)
+        query = SazonalidadeVendedorCota.objects.filter(vendedor_cpf__in = list_cpf).distinct('vendedor_cpf')
+        realizado_total_ano = 0
+        for x in query:
+            realizado_total_ano = realizado_total_ano + x.vl_total_anual
+
+        
+        for x in obj_vendedor:
+            somameses = 0
+            for mes in range(1,13):
+                realizado_vendedor_ano = SazonalidadeVendedorCota.objects.only('vl_total_anual').get(vendedor_cpf = x.cpf, mes = mes).vl_total_anual
+
+                if realizado_vendedor_ano is None:
+                    participacao_vendedor = 0
+                    realizado_vendedor_ano = 0
+                else:
+                    participacao_vendedor = realizado_vendedor_ano / realizado_total_ano
+                    valor_vendedor = round(valor * participacao_vendedor)
+
+                          
+                realizado_vendedor_mes = SazonalidadeVendedorCota.objects.only('percentual').get(vendedor_cpf = x.cpf, mes = mes).percentual 
+                previsto = round((realizado_vendedor_mes / 100) * valor_vendedor)
+                somameses = somameses + previsto
+                realizado_vendedor_mes_dict[mes] = previsto                         
+                realizado_vendedor_dict[x.usuario.first_name] = realizado_vendedor_mes_dict 
+            realizado_vendedor_mes_dict['soma_previsto_anual'] = somameses
+            realizado_vendedor_mes_dict['previsto_anual'] = valor_vendedor
+            realizado_vendedor_mes_dict = {}
+
+        return realizado_vendedor_dict
+
+    def modelo(regiao,valor):
+        obj_modelo = MotoPerfil.objects.distinct('nome')
+        #obj_modelo = MotoPerfil.objects.filter(nome = 'NXR 160 BROS ESDD')
+        realizado_modelo_dict = dict()
+        realizado_modelo_mes_dict = dict()
+        total_dict = dict()
+
+        query = SazonalidadeModeloCota.objects.filter(modelo__in = obj_modelo, regiao = regiao).distinct('modelo')
+        realizado_total_ano = 0
+        for x in query:
+            realizado_total_ano = realizado_total_ano + x.vl_total_anual
+
+        soma_total_tudo = 0
+        for x in obj_modelo:
+
+            #print(x.nome , 'MODELO')    
+            #print(realizado_total_ano)
+            somameses = 0
+            for mes in range(1,13):
+                realizado_regiao_ano = SazonalidadeModeloCota.objects.only('vl_total_anual').get(regiao = regiao, mes = mes, modelo = x).vl_total_anual
+
+                participacao_modelo = realizado_regiao_ano / realizado_total_ano
+                valor_modelo = round(valor * participacao_modelo)
+                
+                # print("-------------------------")
+                # print("modelo", x.nome)
+                # print("REALIZADO MODELO NO ANO", realizado_regiao_ano)
+                # print("porcentagem do modelo ",participacao_modelo * 100)
+                # print("valor a ser vendido em 2020 - 1000 motos ",valor_modelo)
+                # print("mes", mes)
+
+                realizado_modelo_mes = SazonalidadeModeloCota.objects.only('percentual').get(regiao = regiao, mes = mes, modelo = x).percentual 
+                previsto = round((realizado_modelo_mes / 100) * valor_modelo)
+                #print('VALOR MENSAL', previsto)
+                somameses = somameses + previsto
+                realizado_modelo_mes_dict[mes] = previsto
+                realizado_modelo_dict[x.nome] = realizado_modelo_mes_dict
+            soma_total_tudo = soma_total_tudo + somameses
+            realizado_modelo_mes_dict['soma_previsto_anual'] = somameses
+            realizado_modelo_mes_dict['previsto_anual'] = valor_modelo
+            realizado_modelo_mes_dict = {}
+        #print(soma_total_tudo)
+        return realizado_modelo_dict
+    
+    cidade = cidade(regiao,valor)
+    vendedor = vendedor(regiao,valor)
+    modelo = modelo(regiao, valor)
+
+
+    context = {
+        'cidade' : cidade,
+        'vendedor' : vendedor,
+        'modelo' : modelo,
+    }
+    return Response(context)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def sazonalidade_regiao(request,regiao):
 
     ano = 2019
@@ -5376,14 +5855,62 @@ def remove_moto_cancel(request):
     canceladas = Moto.objects.filter(Sub_Forma_Fabrica = 'CARTEIRA LOJA').distinct('Chassi')
     list_chassi = []
     for x in canceladas:
-        list_chassi.append(x.Chassi)
-    
+        list_chassi.append(x.Chassi)    
     # encontra notas desse mesmo chassi e verificar qual deve ser cancelada
+    list_cliente = []
     for i in list_chassi:
-        notas = Moto.objects.filter(Chassi = i)    
-        for x in notas:
-            print(x.Nota_Fiscal)
-            print(x.Valor_da_Nota)
-            print(x.Cliente)
-        print('----------------------')
+        notas = Moto.objects.filter(Chassi = i).order_by('Nota_Fiscal')    
+        list_notas= []
+        cliente = ''
+        if len(notas) not in list_cliente:
+            list_cliente.append(len(notas))
+        print('--------------------------------------')
+        if len(notas) == 2:
+            print('DUAS NOTAS APENAS, CANCELAR AMBAS!!!')
+            print('NOTAS PARA CANCELAR ->', notas)
+            notas[0].delete()
+            notas[1].delete()
+            # for x in notas:
+            #     print('DUAS NOTAS APENAS, CANCELAR AMBAS!!!')
+            #     print('NOTA:', x.Nota_Fiscal)
+            #     print('VALOR:', x.Valor_da_Nota)
+            #     print('CLIENTE:', x.Cliente)
+        elif len(notas) == 3:
+            print('3 NOTAS APENAS, CANCELAR DUAS PRIMEIRAS!!!')
+            if notas[0].Cliente == notas[1].Cliente:
+                print('NOTA VÁLIDA ->>>>>>>>', notas[2].Nota_Fiscal)
+                notas[0].delete()
+                notas[1].delete()
+            elif notas[1].Cliente == notas[2].Cliente:
+                print('NOTA VÁLIDA ->>>>>>>>', notas[0].Nota_Fiscal)
+                notas[1].delete()
+                notas[2].delete()
+            # else: 
+            #     print('PORRA TEM ALGUMA ESCECIONBES')
+            # for x in notas:
+            #     print('NOTA:', x.Nota_Fiscal)
+            #     print('VALOR:', x.Valor_da_Nota)
+            #     print('CLIENTE:', x.Cliente)
+        elif len(notas) == 5:
+            if notas[4].Valor_da_Nota > 0:
+                print('NOTA VÁLIDA ->>>>>>>>', notas[4].Nota_Fiscal)
+                notas[0].delete()
+                notas[1].delete()
+                notas[2].delete()
+                notas[3].delete()
+            # for x in notas:
+            #     print('NOTA:', x.Nota_Fiscal)
+            #     print('VALOR:', x.Valor_da_Nota)
+            #     print('CLIENTE:', x.Cliente)
+        elif len(notas) == 4:
+            notas.delete()
+        else:
+            for x in notas:
+                    print('NOTA:', x.Nota_Fiscal)
+                    print('VALOR:', x.Valor_da_Nota)
+                    print('CLIENTE:', x.Cliente)
+            print('CHASSI DEVOLVIDO MAS NÃO TEM NOTA DE VENDA...')
+            notas.delete()
+    print('NUMERO DE NOTAS PARA CADA CHASSI...', list_cliente)
+        
     return Response('ok')

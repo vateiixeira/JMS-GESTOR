@@ -203,3 +203,33 @@ class SazonalidadeModelo(models.Model):
     percentual = models.FloatField("Porcentual")
     vl_total_anual = models.IntegerField("Valor total no ano")
     ano_base = models.IntegerField("Ano Base")
+
+class SazonalidadeCidadeCota(models.Model):
+    cidade = models.ForeignKey(Cidade, on_delete=models.CASCADE)
+    mes = models.IntegerField("Mês")
+    percentual = models.FloatField("Porcentual")
+    vl_total_anual = models.IntegerField("Valor total no ano")
+    ano_base = models.IntegerField("Ano Base")
+
+class SazonalidadeVendedorCota(models.Model):
+    vendedor_nome = models.CharField('Nome', max_length=250)
+    vendedor_cpf = models.CharField('CPF', max_length=100)
+    mes = models.IntegerField("Mês")
+    percentual = models.FloatField("Porcentual")
+    vl_total_anual = models.IntegerField("Valor total no ano")
+    ano_base = models.IntegerField("Ano Base")
+
+class SazonalidadeRegiaoCota(models.Model):
+    regiao = models.CharField('Região', choices=REGIAO_CHOICE, max_length=100)
+    mes = models.IntegerField("Mês")
+    percentual = models.FloatField("Porcentual")
+    vl_total_anual = models.IntegerField("Valor total no ano")
+    ano_base = models.IntegerField("Ano Base")
+
+class SazonalidadeModeloCota(models.Model):
+    modelo = models.ForeignKey(MotoPerfil, on_delete=models.CASCADE)
+    regiao = models.CharField('Região', choices=REGIAO_CHOICE, max_length=100)
+    mes = models.IntegerField("Mês")
+    percentual = models.FloatField("Porcentual")
+    vl_total_anual = models.IntegerField("Valor total no ano")
+    ano_base = models.IntegerField("Ano Base")

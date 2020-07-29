@@ -23,6 +23,7 @@ from django.http import HttpResponse
 from jms.account.models import REGIAO_CHOICE
 import math 
 from django.db.models import Avg, Count, Min, Sum
+from ..metas.models import *
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -160,6 +161,65 @@ def grava_planejado_firstEtapa(request):
         except FirstEtapa.DoesNotExist: 
             #Instancia os dados do post e salva no banco
             instancia = FirstEtapa()
+            instancia.ano = ano
+            instancia.regiao = regiao
+            instancia.modelo = obj_modelo
+            instancia.jan = value['dados'][0]
+            instancia.fev = value['dados'][1]
+            instancia.mar = value['dados'][2]
+            instancia.abr = value['dados'][3]
+            instancia.mai = value['dados'][4]
+            instancia.jun = value['dados'][5]
+            instancia.jul = value['dados'][6]
+            instancia.ago = value['dados'][7]
+            instancia.sete =value['dados'][8]
+            instancia.out = value['dados'][9]
+            instancia.nov = value['dados'][10]
+            instancia.dez = value['dados'][11]
+            instancia.previsto = value['previsto']
+            instancia.aplicado = value['aplicado']
+            instancia.save()
+
+            context[key] = 'Registro inserido'
+        else:
+            check.ano = ano
+            check.regiao = regiao
+            check.modelo = obj_modelo
+            check.jan = value['dados'][0]
+            check.fev = value['dados'][1]
+            check.mar = value['dados'][2]
+            check.abr = value['dados'][3]
+            check.mai = value['dados'][4]
+            check.jun = value['dados'][5]
+            check.jul = value['dados'][6]
+            check.ago = value['dados'][7]
+            check.sete =value['dados'][8]
+            check.out = value['dados'][9]
+            check.nov = value['dados'][10]
+            check.dez = value['dados'][11]
+            check.previsto = value['previsto']
+            check.aplicado = value['aplicado']
+            check.save()
+            context[key] = 'Registro atualizado'
+    return Response(context)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def grava_planejado_firstEtapa_cota(request):
+    data = json.loads(request.body)
+    modelos = data['dados']['modelo']
+    ano = data['ano']
+    regiao = data['regiao']
+    context = {}
+    for key,value in modelos.items():
+        obj_modelo = MotoPerfil.objects.get(nome = key)
+
+        # checa se o registro ja existe no banco
+        try:
+            check = FirstEtapaCota.objects.get(regiao = regiao, ano = ano, modelo = obj_modelo)
+        except FirstEtapaCota.DoesNotExist: 
+            #Instancia os dados do post e salva no banco
+            instancia = FirstEtapaCota()
             instancia.ano = ano
             instancia.regiao = regiao
             instancia.modelo = obj_modelo
@@ -505,6 +565,236 @@ def list_planejado_modeloVendedor(request,vendedor,modelo):
     
 
     return Response(context)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def post_planejado(request):
+    data = json.loads(request.body.decode('utf-8'))
+    ano = 2020
+    regiao = data['regiao']
+
+    # INSERE NO BD OS DADOS DE CIDADES
+    cidade = data['cidade']
+    obj_cidades = Cidade.objects.filter(regiao = regiao)
+    for z in obj_cidades:
+        aux = []
+        modelos = MotoPerfil.objects.all()
+        v = cidade[z.nome]
+        for modelo in modelos:
+            if modelo.nome in v:
+                dados_modelo = v[modelo.nome]
+                aplicado = dados_modelo['aplicado']
+                arr_aplicado = dados_modelo['dados']
+                arr_previsto = dados_modelo['arrPrevisto']
+                previsto = dados_modelo['previsto']
+                lista = CidadeModelo(
+                    cidade        = z,
+                    modelo        = modelo,
+                    aplicado      = aplicado ,
+                    previsto      = previsto ,
+                    ano           = ano ,
+                    aplicado_jan  = arr_aplicado[0] ,
+                    aplicado_fev  = arr_aplicado[1] ,
+                    aplicado_mar  = arr_aplicado[2] ,
+                    aplicado_abr  = arr_aplicado[3] ,
+                    aplicado_mai  = arr_aplicado[4] ,
+                    aplicado_jun  = arr_aplicado[5] ,
+                    aplicado_jul  = arr_aplicado[6] ,
+                    aplicado_ago  = arr_aplicado[7] ,
+                    aplicado_sete = arr_aplicado[8], 
+                    aplicado_out  = arr_aplicado[9] ,
+                    aplicado_nov  = arr_aplicado[10] ,
+                    aplicado_dez  = arr_aplicado[11] ,
+                    previsto_jan  = arr_previsto[0] ,
+                    previsto_fev  = arr_previsto[1] ,
+                    previsto_mar  = arr_previsto[2] ,
+                    previsto_abr  = arr_previsto[3] ,
+                    previsto_mai  = arr_previsto[4] ,
+                    previsto_jun  = arr_previsto[5] ,
+                    previsto_jul  = arr_previsto[6] ,
+                    previsto_ago  = arr_previsto[7] ,
+                    previsto_sete = arr_previsto[8], 
+                    previsto_out  = arr_previsto[9] ,
+                    previsto_nov  = arr_previsto[10] ,
+                    previsto_dez  = arr_previsto[11] 
+                )
+                aux.append(lista)
+        print(aux)
+        CidadeModelo.objects.bulk_create(aux)
+
+    # INSERE NO BD OS DADOS DE VENDEDORES
+    vendedor = data['vendedor']
+    vendedores = Perfil.objects.filter(regiao = regiao, cargo = 'VENDEDOR')
+    for x in vendedores:        
+        aux = []
+        v = vendedor[x.usuario.first_name]
+        modelos = MotoPerfil.objects.all()  
+        for modelo in modelos:
+            if modelo.nome in v:
+                # print(x.usuario.first_name)
+                # print(modelo.nome)
+                dados_modelo = v[modelo.nome]
+                aplicado = dados_modelo['aplicado']
+                arr_aplicado = dados_modelo['dados']
+                arr_previsto = dados_modelo['arrPrevisto']
+                previsto = dados_modelo['previsto']
+                lista = VendedorModelo(
+                    vendedor      = x,
+                    modelo        = modelo,
+                    aplicado      = aplicado ,
+                    previsto      = previsto ,
+                    ano           = ano ,
+                    aplicado_jan  = arr_aplicado[0] ,
+                    aplicado_fev  = arr_aplicado[1] ,
+                    aplicado_mar  = arr_aplicado[2] ,
+                    aplicado_abr  = arr_aplicado[3] ,
+                    aplicado_mai  = arr_aplicado[4] ,
+                    aplicado_jun  = arr_aplicado[5] ,
+                    aplicado_jul  = arr_aplicado[6] ,
+                    aplicado_ago  = arr_aplicado[7] ,
+                    aplicado_sete = arr_aplicado[8], 
+                    aplicado_out  = arr_aplicado[9] ,
+                    aplicado_nov  = arr_aplicado[10] ,
+                    aplicado_dez  = arr_aplicado[11] ,
+                    previsto_jan  = arr_previsto[0] ,
+                    previsto_fev  = arr_previsto[1] ,
+                    previsto_mar  = arr_previsto[2] ,
+                    previsto_abr  = arr_previsto[3] ,
+                    previsto_mai  = arr_previsto[4] ,
+                    previsto_jun  = arr_previsto[5] ,
+                    previsto_jul  = arr_previsto[6] ,
+                    previsto_ago  = arr_previsto[7] ,
+                    previsto_sete = arr_previsto[8], 
+                    previsto_out  = arr_previsto[9] ,
+                    previsto_nov  = arr_previsto[10] ,
+                    previsto_dez  = arr_previsto[11] 
+                )
+                aux.append(lista)
+                # print('APLICADO: ', aplicado)
+                # print('PREVISTO: ', previsto)
+                # print('arr_aplicado: ', arr_aplicado)
+                # print('arr_previsto: ', arr_previsto)
+        #print('-------------------------------')
+        #print(x.usuario.first_name)
+        #print(aux)
+        VendedorModelo.objects.bulk_create(aux)
+
+    return Response('ok')
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def post_planejado_cota(request):
+    data = json.loads(request.body.decode('utf-8'))
+    ano = 2020
+    regiao = data['regiao']
+
+    # INSERE NO BD OS DADOS DE CIDADES
+    cidade = data['cidade']
+    obj_cidades = Cidade.objects.filter(regiao = regiao)
+    for z in obj_cidades:
+        aux = []
+        modelos = MotoPerfil.objects.all()
+        v = cidade[z.nome]
+        for modelo in modelos:
+            if modelo.nome in v:
+                dados_modelo = v[modelo.nome]
+                aplicado = dados_modelo['aplicado']
+                arr_aplicado = dados_modelo['dados']
+                arr_previsto = dados_modelo['arrPrevisto']
+                previsto = dados_modelo['previsto']
+                lista = CidadeModeloCota(
+                    cidade        = z,
+                    modelo        = modelo,
+                    aplicado      = aplicado ,
+                    previsto      = previsto ,
+                    ano           = ano ,
+                    aplicado_jan  = arr_aplicado[0] ,
+                    aplicado_fev  = arr_aplicado[1] ,
+                    aplicado_mar  = arr_aplicado[2] ,
+                    aplicado_abr  = arr_aplicado[3] ,
+                    aplicado_mai  = arr_aplicado[4] ,
+                    aplicado_jun  = arr_aplicado[5] ,
+                    aplicado_jul  = arr_aplicado[6] ,
+                    aplicado_ago  = arr_aplicado[7] ,
+                    aplicado_sete = arr_aplicado[8], 
+                    aplicado_out  = arr_aplicado[9] ,
+                    aplicado_nov  = arr_aplicado[10] ,
+                    aplicado_dez  = arr_aplicado[11] ,
+                    previsto_jan  = arr_previsto[0] ,
+                    previsto_fev  = arr_previsto[1] ,
+                    previsto_mar  = arr_previsto[2] ,
+                    previsto_abr  = arr_previsto[3] ,
+                    previsto_mai  = arr_previsto[4] ,
+                    previsto_jun  = arr_previsto[5] ,
+                    previsto_jul  = arr_previsto[6] ,
+                    previsto_ago  = arr_previsto[7] ,
+                    previsto_sete = arr_previsto[8], 
+                    previsto_out  = arr_previsto[9] ,
+                    previsto_nov  = arr_previsto[10] ,
+                    previsto_dez  = arr_previsto[11] 
+                )
+                aux.append(lista)
+        print(aux)
+        CidadeModeloCota.objects.bulk_create(aux)
+
+    # INSERE NO BD OS DADOS DE VENDEDORES
+    vendedor = data['vendedor']
+    vendedores = Perfil.objects.filter(regiao = regiao, cargo = 'VENDEDOR')
+    for x in vendedores:        
+        aux = []
+        v = vendedor[x.usuario.first_name]
+        modelos = MotoPerfil.objects.all()  
+        for modelo in modelos:
+            if modelo.nome in v:
+                # print(x.usuario.first_name)
+                # print(modelo.nome)
+                dados_modelo = v[modelo.nome]
+                aplicado = dados_modelo['aplicado']
+                arr_aplicado = dados_modelo['dados']
+                arr_previsto = dados_modelo['arrPrevisto']
+                previsto = dados_modelo['previsto']
+                lista = VendedorModeloCota(
+                    vendedor      = x,
+                    modelo        = modelo,
+                    aplicado      = aplicado ,
+                    previsto      = previsto ,
+                    ano           = ano ,
+                    aplicado_jan  = arr_aplicado[0] ,
+                    aplicado_fev  = arr_aplicado[1] ,
+                    aplicado_mar  = arr_aplicado[2] ,
+                    aplicado_abr  = arr_aplicado[3] ,
+                    aplicado_mai  = arr_aplicado[4] ,
+                    aplicado_jun  = arr_aplicado[5] ,
+                    aplicado_jul  = arr_aplicado[6] ,
+                    aplicado_ago  = arr_aplicado[7] ,
+                    aplicado_sete = arr_aplicado[8], 
+                    aplicado_out  = arr_aplicado[9] ,
+                    aplicado_nov  = arr_aplicado[10] ,
+                    aplicado_dez  = arr_aplicado[11] ,
+                    previsto_jan  = arr_previsto[0] ,
+                    previsto_fev  = arr_previsto[1] ,
+                    previsto_mar  = arr_previsto[2] ,
+                    previsto_abr  = arr_previsto[3] ,
+                    previsto_mai  = arr_previsto[4] ,
+                    previsto_jun  = arr_previsto[5] ,
+                    previsto_jul  = arr_previsto[6] ,
+                    previsto_ago  = arr_previsto[7] ,
+                    previsto_sete = arr_previsto[8], 
+                    previsto_out  = arr_previsto[9] ,
+                    previsto_nov  = arr_previsto[10] ,
+                    previsto_dez  = arr_previsto[11] 
+                )
+                aux.append(lista)
+                # print('APLICADO: ', aplicado)
+                # print('PREVISTO: ', previsto)
+                # print('arr_aplicado: ', arr_aplicado)
+                # print('arr_previsto: ', arr_previsto)
+        #print('-------------------------------')
+        #print(x.usuario.first_name)
+        #print(aux)
+        VendedorModeloCota.objects.bulk_create(aux)
+    return Response('ok')
+
 
 """
 FUNCÇÕES DE EXEMPLOS ABAIXO

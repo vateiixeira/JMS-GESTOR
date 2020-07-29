@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'jms.account',
     'jms.api',
     'jms.planejado',
+    'jms.metas',
     'corsheaders',
     # EXTENSIONS
     'cloudinary',
