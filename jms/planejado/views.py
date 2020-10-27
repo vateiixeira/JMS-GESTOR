@@ -24,6 +24,9 @@ from jms.account.models import REGIAO_CHOICE
 import math 
 from django.db.models import Avg, Count, Min, Sum
 from ..metas.models import *
+from ..api.views import list_meses_moto
+from django.core.exceptions import ObjectDoesNotExist
+import datetime
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -281,6 +284,7 @@ def previsto_planejamento_regiao(request,regiao,valor):
         
         for x in obj_cidade:
             somameses = 0
+            realizado = []
             for mes in range(1,13):
                 sazonalidade = SazonalidadeCidade.objects.get(cidade_id = x.id, mes = mes)
                 realizado_cidade_ano = sazonalidade.vl_total_anual
@@ -329,6 +333,11 @@ def previsto_planejamento_regiao(request,regiao,valor):
         
         for x in obj_vendedor:
             somameses = 0
+            print(x.cpf)
+            try:
+                SazonalidadeVendedor.objects.filter(vendedor_cpf = x.cpf)
+            except SazonalidadeVendedor.DoesNotExist:
+                break
             for mes in range(1,13):
                 realizado_vendedor_ano = SazonalidadeVendedor.objects.only('vl_total_anual').get(vendedor_cpf = x.cpf, mes = mes).vl_total_anual
 
@@ -366,6 +375,7 @@ def previsto_planejamento_regiao(request,regiao,valor):
             #print(realizado_total_ano)
             somameses = 0
             for mes in range(1,13):
+                print(regiao,mes,x)
                 realizado_regiao_ano = SazonalidadeModelo.objects.only('vl_total_anual').get(regiao = regiao, mes = mes, modelo = x).vl_total_anual
 
                 participacao_modelo = realizado_regiao_ano / realizado_total_ano
@@ -413,6 +423,21 @@ def list_planejado_modeloCidade(request,cidade,modelo):
     obj_modelo = MotoPerfil.objects.get(nome = modelo)
     regiao = obj_cidade.regiao
 
+
+    def calcula_realizado(cidade,modelo):
+        realizado = []
+        for mes in range(1,13):
+            now = datetime.datetime.now()
+            ano_atual = now.year
+            ultimo_dia_mes = calendar.monthrange(ano_atual,mes)
+            realizado_mes = Moto.objects.filter(Veiculo = modelo, Municipio = cidade, Data__gte = f'{ano_atual}-{mes}-1', Data__lte=f'{ano_atual}-{mes}-{ultimo_dia_mes[1]}').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+            if realizado_mes is None:
+                realizado.append(0)
+            else:
+                realizado.append(realizado_mes)
+        return realizado
+
+
     def porcentagem_cidade_modelo(cidade,modelo,regiao):
         realizado_ano = SazonalidadeModeloCidade.objects.filter(modelo = modelo, regiao = regiao, mes = 1).aggregate(Sum('vl_total_anual'))['vl_total_anual__sum']
         realizado_ano_modelo = SazonalidadeModeloCidade.objects.get(modelo = modelo, cidade = cidade, mes = 1).vl_total_anual
@@ -445,14 +470,22 @@ def list_planejado_modeloCidade(request,cidade,modelo):
             qtd_total_aplicado = preAplicado.aplicado
 
             # pega a participacao da cidade multiplica pelo numero de qtd_modelo_regiao para achar o numero de motos q irá vender
-            #total_previsto = int(participacao_cidade * qtd_modelo_regiao)
+            # total_previsto = int(participacao_cidade * qtd_modelo_regiao)
             total_previsto = int(participacao_cidade * qtd_total_previsto)
             total_aplicado = int(participacao_cidade * qtd_total_aplicado)
+
+
+            ####### potencial
+            obj_potencial = PotencialCidade.objects.get(cidade = cidade)
+            total_potencial = obj_potencial.anual
+            potencial = int(participacao_cidade * total_potencial)
+            
 
             # calcula o previsto com base na sazonalidade do modelo pegando o total_previsto
             obj_sazonalidade = SazonalidadeModeloCidade.objects.filter(modelo = modelo, cidade = cidade)
             list_previsto_mensal = []
             list_preaplicado_mensal = []
+            list_potencial_mensal = []
             soma_previsto = 0
             soma_preaplicado = 0
             for x in obj_sazonalidade:
@@ -460,14 +493,19 @@ def list_planejado_modeloCidade(request,cidade,modelo):
                 list_preaplicado_mensal.append(round(total_aplicado * (x.percentual / 100)))
                 soma_previsto = soma_previsto + round(total_previsto * (x.percentual / 100))
                 soma_preaplicado = soma_preaplicado + round(total_aplicado * (x.percentual / 100))
+                list_potencial_mensal.append(round(potencial * (x.percentual / 100)))
+
+            print(list_potencial_mensal)
             context['previsto'] = list_previsto_mensal
             context['preaplicado'] = list_preaplicado_mensal
             context['total_preaplicado'] = soma_preaplicado
             context['total_previsto'] = soma_previsto
+            context['potencial'] = list_potencial_mensal
             return context
         
     context = calcula_previsto(obj_cidade,obj_modelo,regiao)
     
+    context['realizado'] = calcula_realizado(cidade,modelo)
 
     return Response(context)
 
@@ -481,6 +519,20 @@ def list_planejado_modeloVendedor(request,vendedor,modelo):
     obj_vendedor = Perfil.objects.get(usuario = obj_user)
     obj_modelo = MotoPerfil.objects.get(nome = modelo)
     regiao = obj_vendedor.regiao
+
+    
+    def calcula_realizado(obj_vendedor,modelo):
+        realizado = []
+        for mes in range(1,13):
+            now = datetime.datetime.now()
+            ano_atual = now.year
+            ultimo_dia_mes = calendar.monthrange(ano_atual,mes)
+            realizado_mes = Moto.objects.filter(Veiculo = modelo, Vendedor_cpf = obj_vendedor.cpf, Data__gte = f'{ano_atual}-{mes}-1', Data__lte=f'{ano_atual}-{mes}-{ultimo_dia_mes[1]}').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+            if realizado_mes is None:
+                realizado.append(0)
+            else:
+                realizado.append(realizado_mes)
+        return realizado
 
     # pega toda a equipe da região para calcular o total de realizado no ano
     obj_equipe = Perfil.objects.filter(regiao = regiao)
@@ -545,6 +597,7 @@ def list_planejado_modeloVendedor(request,vendedor,modelo):
                 context['preaplicado'] = list_preaplicado_mensal
                 context['total_preaplicado'] = total_aplicado
                 context['total_previsto'] = total_previsto
+                print('não existe sazonalidade')
             else:
                 list_previsto_mensal = []
                 list_preaplicado_mensal = []
@@ -562,6 +615,7 @@ def list_planejado_modeloVendedor(request,vendedor,modelo):
             return context
         
     context = calcula_previsto(obj_vendedor,obj_modelo,regiao)
+    context['realizado'] = calcula_realizado(obj_vendedor,modelo)
     
 
     return Response(context)
@@ -587,38 +641,43 @@ def post_planejado(request):
                 arr_aplicado = dados_modelo['dados']
                 arr_previsto = dados_modelo['arrPrevisto']
                 previsto = dados_modelo['previsto']
-                lista = CidadeModelo(
-                    cidade        = z,
-                    modelo        = modelo,
-                    aplicado      = aplicado ,
-                    previsto      = previsto ,
-                    ano           = ano ,
-                    aplicado_jan  = arr_aplicado[0] ,
-                    aplicado_fev  = arr_aplicado[1] ,
-                    aplicado_mar  = arr_aplicado[2] ,
-                    aplicado_abr  = arr_aplicado[3] ,
-                    aplicado_mai  = arr_aplicado[4] ,
-                    aplicado_jun  = arr_aplicado[5] ,
-                    aplicado_jul  = arr_aplicado[6] ,
-                    aplicado_ago  = arr_aplicado[7] ,
-                    aplicado_sete = arr_aplicado[8], 
-                    aplicado_out  = arr_aplicado[9] ,
-                    aplicado_nov  = arr_aplicado[10] ,
-                    aplicado_dez  = arr_aplicado[11] ,
-                    previsto_jan  = arr_previsto[0] ,
-                    previsto_fev  = arr_previsto[1] ,
-                    previsto_mar  = arr_previsto[2] ,
-                    previsto_abr  = arr_previsto[3] ,
-                    previsto_mai  = arr_previsto[4] ,
-                    previsto_jun  = arr_previsto[5] ,
-                    previsto_jul  = arr_previsto[6] ,
-                    previsto_ago  = arr_previsto[7] ,
-                    previsto_sete = arr_previsto[8], 
-                    previsto_out  = arr_previsto[9] ,
-                    previsto_nov  = arr_previsto[10] ,
-                    previsto_dez  = arr_previsto[11] 
-                )
-                aux.append(lista)
+                try:
+                    CidadeModelo.objects.get(cidade = z, modelo = modelo, ano = ano)
+                except CidadeModelo.DoesNotExist:
+                    lista = CidadeModelo(
+                        cidade        = z,
+                        modelo        = modelo,
+                        aplicado      = aplicado ,
+                        previsto      = previsto ,
+                        ano           = ano ,
+                        aplicado_jan  = arr_aplicado[0] ,
+                        aplicado_fev  = arr_aplicado[1] ,
+                        aplicado_mar  = arr_aplicado[2] ,
+                        aplicado_abr  = arr_aplicado[3] ,
+                        aplicado_mai  = arr_aplicado[4] ,
+                        aplicado_jun  = arr_aplicado[5] ,
+                        aplicado_jul  = arr_aplicado[6] ,
+                        aplicado_ago  = arr_aplicado[7] ,
+                        aplicado_sete = arr_aplicado[8], 
+                        aplicado_out  = arr_aplicado[9] ,
+                        aplicado_nov  = arr_aplicado[10] ,
+                        aplicado_dez  = arr_aplicado[11] ,
+                        previsto_jan  = arr_previsto[0] ,
+                        previsto_fev  = arr_previsto[1] ,
+                        previsto_mar  = arr_previsto[2] ,
+                        previsto_abr  = arr_previsto[3] ,
+                        previsto_mai  = arr_previsto[4] ,
+                        previsto_jun  = arr_previsto[5] ,
+                        previsto_jul  = arr_previsto[6] ,
+                        previsto_ago  = arr_previsto[7] ,
+                        previsto_sete = arr_previsto[8], 
+                        previsto_out  = arr_previsto[9] ,
+                        previsto_nov  = arr_previsto[10] ,
+                        previsto_dez  = arr_previsto[11] 
+                    )
+                    aux.append(lista)
+                else:
+                    print('já existe a', z, 'nas metas.. pulando')
         print(aux)
         CidadeModelo.objects.bulk_create(aux)
 
@@ -631,54 +690,49 @@ def post_planejado(request):
         modelos = MotoPerfil.objects.all()  
         for modelo in modelos:
             if modelo.nome in v:
-                # print(x.usuario.first_name)
-                # print(modelo.nome)
                 dados_modelo = v[modelo.nome]
                 aplicado = dados_modelo['aplicado']
                 arr_aplicado = dados_modelo['dados']
                 arr_previsto = dados_modelo['arrPrevisto']
                 previsto = dados_modelo['previsto']
-                lista = VendedorModelo(
-                    vendedor      = x,
-                    modelo        = modelo,
-                    aplicado      = aplicado ,
-                    previsto      = previsto ,
-                    ano           = ano ,
-                    aplicado_jan  = arr_aplicado[0] ,
-                    aplicado_fev  = arr_aplicado[1] ,
-                    aplicado_mar  = arr_aplicado[2] ,
-                    aplicado_abr  = arr_aplicado[3] ,
-                    aplicado_mai  = arr_aplicado[4] ,
-                    aplicado_jun  = arr_aplicado[5] ,
-                    aplicado_jul  = arr_aplicado[6] ,
-                    aplicado_ago  = arr_aplicado[7] ,
-                    aplicado_sete = arr_aplicado[8], 
-                    aplicado_out  = arr_aplicado[9] ,
-                    aplicado_nov  = arr_aplicado[10] ,
-                    aplicado_dez  = arr_aplicado[11] ,
-                    previsto_jan  = arr_previsto[0] ,
-                    previsto_fev  = arr_previsto[1] ,
-                    previsto_mar  = arr_previsto[2] ,
-                    previsto_abr  = arr_previsto[3] ,
-                    previsto_mai  = arr_previsto[4] ,
-                    previsto_jun  = arr_previsto[5] ,
-                    previsto_jul  = arr_previsto[6] ,
-                    previsto_ago  = arr_previsto[7] ,
-                    previsto_sete = arr_previsto[8], 
-                    previsto_out  = arr_previsto[9] ,
-                    previsto_nov  = arr_previsto[10] ,
-                    previsto_dez  = arr_previsto[11] 
-                )
-                aux.append(lista)
-                # print('APLICADO: ', aplicado)
-                # print('PREVISTO: ', previsto)
-                # print('arr_aplicado: ', arr_aplicado)
-                # print('arr_previsto: ', arr_previsto)
-        #print('-------------------------------')
-        #print(x.usuario.first_name)
-        #print(aux)
+                try:
+                    VendedorModelo.objects.get(vendedor = x, modelo = modelo, ano = ano)
+                except VendedorModelo.DoesNotExist:
+                    lista = VendedorModelo(
+                        vendedor      = x,
+                        modelo        = modelo,
+                        aplicado      = aplicado ,
+                        previsto      = previsto ,
+                        ano           = ano ,
+                        aplicado_jan  = arr_aplicado[0] ,
+                        aplicado_fev  = arr_aplicado[1] ,
+                        aplicado_mar  = arr_aplicado[2] ,
+                        aplicado_abr  = arr_aplicado[3] ,
+                        aplicado_mai  = arr_aplicado[4] ,
+                        aplicado_jun  = arr_aplicado[5] ,
+                        aplicado_jul  = arr_aplicado[6] ,
+                        aplicado_ago  = arr_aplicado[7] ,
+                        aplicado_sete = arr_aplicado[8], 
+                        aplicado_out  = arr_aplicado[9] ,
+                        aplicado_nov  = arr_aplicado[10] ,
+                        aplicado_dez  = arr_aplicado[11] ,
+                        previsto_jan  = arr_previsto[0] ,
+                        previsto_fev  = arr_previsto[1] ,
+                        previsto_mar  = arr_previsto[2] ,
+                        previsto_abr  = arr_previsto[3] ,
+                        previsto_mai  = arr_previsto[4] ,
+                        previsto_jun  = arr_previsto[5] ,
+                        previsto_jul  = arr_previsto[6] ,
+                        previsto_ago  = arr_previsto[7] ,
+                        previsto_sete = arr_previsto[8], 
+                        previsto_out  = arr_previsto[9] ,
+                        previsto_nov  = arr_previsto[10] ,
+                        previsto_dez  = arr_previsto[11] 
+                    )
+                    aux.append(lista)
+                else:
+                    print(f'já existe o vendedor {x} cadastrado para essa meta com modelo {modelo}, pulando')
         VendedorModelo.objects.bulk_create(aux)
-
     return Response('ok')
 
 @api_view(['POST'])
@@ -814,3 +868,190 @@ def list_sazonalidade_modeloVendedor(request):
     query = SazonalidadeModeloVendedor.objects.filter(modelo = 7, vendedor_cpf= '07042686632')
     serializer = SazonalidadeModeloVendedorSerializer(query, many=True)
     return Response(serializer.data)
+
+"""
+EDITAR METAS
+"""
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def previsto_planejamento_regiao_edit(request,regiao):
+    list_meses_moto = [
+            'jan',
+            'fev',
+            'mar',
+            'abr',
+            'mai',
+            'jun',
+            'jul',
+            'ago',
+            'sete',
+            'out',
+            'nov',
+            'dez'
+        ]
+
+    def cidade(regiao):
+        obj_cidade = Cidade.objects.filter(regiao=regiao)
+        realizado_cidade_dict = dict()
+        total_dict = dict()
+        obj_modelo = MotoPerfil.objects.all()
+        
+        for x in obj_cidade:
+            modelo_dict = {}
+            for y in obj_modelo:
+                realizado_modelo_mes_dict = dict()
+                try:
+                    query = CidadeModelo.objects.get(cidade = x, modelo = y)
+                except CidadeModelo.DoesNotExist:
+                    break
+                realizado_modelo_mes_dict[1]=query.aplicado_jan
+                realizado_modelo_mes_dict[2]=query.aplicado_fev
+                realizado_modelo_mes_dict[3]=query.aplicado_mar
+                realizado_modelo_mes_dict[4]=query.aplicado_abr
+                realizado_modelo_mes_dict[5]=query.aplicado_mai
+                realizado_modelo_mes_dict[6]=query.aplicado_jun
+                realizado_modelo_mes_dict[7]=query.aplicado_jul
+                realizado_modelo_mes_dict[8]=query.aplicado_ago
+                realizado_modelo_mes_dict[9]=query.aplicado_sete
+                realizado_modelo_mes_dict[10]=query.aplicado_out
+                realizado_modelo_mes_dict[11]=query.aplicado_nov
+                realizado_modelo_mes_dict[12]=query.aplicado_dez                
+                realizado_modelo_mes_dict['aplicado'] = query.aplicado
+                realizado_modelo_mes_dict['previsto'] = query.previsto 
+                modelo_dict[y.nome] = realizado_modelo_mes_dict 
+
+                realizado = []
+                for mes in range(1,13):
+                    now = datetime.datetime.now()
+                    ano_atual = now.year
+                    ultimo_dia_mes = calendar.monthrange(ano_atual,mes)
+                    realizado_mes = Moto.objects.filter(Veiculo = y.nome, Municipio = x.nome, Data__gte = f'{ano_atual}-{mes}-1', Data__lte=f'{ano_atual}-{mes}-{ultimo_dia_mes[1]}').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+                    if realizado_mes is None:
+                        realizado.append(0)
+                    else:
+                        realizado.append(realizado_mes)
+                realizado_modelo_mes_dict['realizado'] = realizado
+                        
+            realizado_cidade_dict[x.nome] = modelo_dict
+                
+        return realizado_cidade_dict            
+
+    def vendedor(regiao):
+        obj_vendedor = Perfil.objects.filter(regiao = regiao).exclude(cargo__in = ['ADMIN', 'SUPERVISOR', 'GERENTE'])
+
+        obj_cidade = Cidade.objects.filter(regiao=regiao)
+        realizado_cidade_dict = dict()
+        obj_modelo = MotoPerfil.objects.all()
+        
+        for x in obj_vendedor:
+            modelo_dict = {}
+            for y in obj_modelo:
+                realizado_modelo_mes_dict = dict()
+                try:
+                    query = VendedorModelo.objects.get(vendedor = x, modelo = y)
+                except VendedorModelo.DoesNotExist:
+                    realizado_modelo_mes_dict[1]=0
+                    realizado_modelo_mes_dict[2]=0
+                    realizado_modelo_mes_dict[3]=0
+                    realizado_modelo_mes_dict[4]=0
+                    realizado_modelo_mes_dict[5]=0
+                    realizado_modelo_mes_dict[6]=0
+                    realizado_modelo_mes_dict[7]=0
+                    realizado_modelo_mes_dict[8]=0
+                    realizado_modelo_mes_dict[9]=0
+                    realizado_modelo_mes_dict[10]=0
+                    realizado_modelo_mes_dict[11]=0
+                    realizado_modelo_mes_dict[12]=0       
+                    realizado_modelo_mes_dict['aplicado'] = 0
+                    realizado_modelo_mes_dict['previsto'] = 0
+                    modelo_dict[y.nome] = realizado_modelo_mes_dict 
+                else:
+                    realizado_modelo_mes_dict[1]=query.aplicado_jan
+                    realizado_modelo_mes_dict[2]=query.aplicado_fev
+                    realizado_modelo_mes_dict[3]=query.aplicado_mar
+                    realizado_modelo_mes_dict[4]=query.aplicado_abr
+                    realizado_modelo_mes_dict[5]=query.aplicado_mai
+                    realizado_modelo_mes_dict[6]=query.aplicado_jun
+                    realizado_modelo_mes_dict[7]=query.aplicado_jul
+                    realizado_modelo_mes_dict[8]=query.aplicado_ago
+                    realizado_modelo_mes_dict[9]=query.aplicado_sete
+                    realizado_modelo_mes_dict[10]=query.aplicado_out
+                    realizado_modelo_mes_dict[11]=query.aplicado_nov
+                    realizado_modelo_mes_dict[12]=query.aplicado_dez                
+                    realizado_modelo_mes_dict['aplicado'] = query.aplicado
+                    realizado_modelo_mes_dict['previsto'] = query.previsto
+
+                realizado = []
+                for mes in range(1,13):
+                    now = datetime.datetime.now()
+                    ano_atual = now.year
+                    ultimo_dia_mes = calendar.monthrange(ano_atual,mes)
+                    realizado_mes = Moto.objects.filter(Veiculo = y.nome, Vendedor_cpf = x.cpf, Data__gte = f'{ano_atual}-{mes}-1', Data__lte=f'{ano_atual}-{mes}-{ultimo_dia_mes[1]}').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+                    if realizado_mes is None:
+                        realizado.append(0)
+                    else:
+                        realizado.append(realizado_mes)
+                realizado_modelo_mes_dict['realizado'] = realizado 
+                modelo_dict[y.nome] = realizado_modelo_mes_dict 
+            realizado_cidade_dict[x.usuario.first_name] = modelo_dict
+                
+        return realizado_cidade_dict 
+
+    def modelo(regiao):
+        obj_modelo = MotoPerfil.objects.distinct('nome')
+        #obj_modelo = MotoPerfil.objects.filter(nome = 'NXR 160 BROS ESDD')
+        realizado_modelo_dict = dict()
+        realizado_modelo_mes_dict = dict()
+        total_dict = dict()
+
+        obj_cidades = Cidade.objects.filter(regiao = regiao)
+        list_cidades = []
+        for x in obj_cidades:
+            list_cidades.append(x.nome)
+
+        for x in obj_modelo:
+            query = FirstEtapa.objects.get(regiao = regiao, modelo = x)
+
+            realizado_modelo_mes_dict[1]=query.jan
+            realizado_modelo_mes_dict[2]=query.fev
+            realizado_modelo_mes_dict[3]=query.mar
+            realizado_modelo_mes_dict[4]=query.abr
+            realizado_modelo_mes_dict[5]=query.mai
+            realizado_modelo_mes_dict[6]=query.jun
+            realizado_modelo_mes_dict[7]=query.jul
+            realizado_modelo_mes_dict[8]=query.ago
+            realizado_modelo_mes_dict[9]=query.sete
+            realizado_modelo_mes_dict[10]=query.out
+            realizado_modelo_mes_dict[11]=query.nov
+            realizado_modelo_mes_dict[12]=query.dez                
+            realizado_modelo_mes_dict['aplicado'] = query.aplicado
+            realizado_modelo_mes_dict['previsto'] = query.previsto
+
+            realizado = []
+            for mes in range(1,13):
+                now = datetime.datetime.now()
+                ano_atual = now.year
+                ultimo_dia_mes = calendar.monthrange(ano_atual,mes)
+                realizado_mes = Moto.objects.filter(Veiculo = x.nome, Municipio__in = list_cidades, Data__gte = f'{ano_atual}-{mes}-1', Data__lte=f'{ano_atual}-{mes}-{ultimo_dia_mes[1]}').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+                if realizado_mes is None:
+                    realizado.append(0)
+                else:
+                    realizado.append(realizado_mes)
+            realizado_modelo_mes_dict['realizado'] = realizado 
+
+            realizado_modelo_dict[x.nome] = realizado_modelo_mes_dict
+
+            realizado_modelo_mes_dict = {}
+        return realizado_modelo_dict
+    
+    cidade = cidade(regiao)
+    vendedor = vendedor(regiao)
+    modelo = modelo(regiao)
+
+    context = {
+        'cidade' : cidade,
+        'vendedor' : vendedor,
+        'modelo' : modelo,
+    }
+    return Response(context)

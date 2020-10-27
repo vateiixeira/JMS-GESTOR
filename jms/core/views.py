@@ -295,10 +295,10 @@ def porcentagem_2019_tudo(request):
 
 def sync_moto(request):
     #migra_dados()
-    dia = 20
-    mes = 3
+    dia = 1
+    mes = 8
     ano = 2020
-    cdempresa = 1
+    cdempresa = 3
 
     if cdempresa == 1:
         regiao = 'JNB'

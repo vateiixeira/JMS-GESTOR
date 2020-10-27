@@ -40,14 +40,15 @@ class FirstEtapa(models.Model):
 
 class PotencialCidade(models.Model):
     cidade = models.ForeignKey(Cidade, on_delete=models.CASCADE)
-    anual = models.IntegerField('Anual')
+    anual = models.IntegerField('Anual', null=True)
+    mensal = models.IntegerField('Mensal', null=True)
 
     class Meta:
         verbose_name = "PotencialCidade"
         verbose_name_plural = "PotencialCidades"
      
     def __str__(self):
-        return str(self.cidade)
+        return str(f'{self.cidade} | {self.cidade.regiao}')
 
 class SazonalidadeModeloCidadeCota(models.Model):
     modelo = models.ForeignKey(MotoPerfil, on_delete=models.CASCADE)

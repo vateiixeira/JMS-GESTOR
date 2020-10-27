@@ -3,16 +3,23 @@ import django
 from .models import Moto
 
 
+# def conecta():
+#     con = fdb.connect(
+#     host='localhost', database='/Users/vinicius/Desktop/VISION.FDB',
+#     user='sysdba', password='masterkey'
+#             )
+#     return con.cursor()
 def conecta():
     con = fdb.connect(
-    host='localhost', database='/Users/Administrator/Desktop/VisionQuarta1259/SDFSDF.FDB',
-    user='sysdba', password='masterkey'
+    dsn='179.190.39.71:C:\SISAND\VISION_DB\VISION.FDB',
+    user='LEITOR', password='james',
+    role='GRUPOLEITOR',
             )
     return con.cursor()
 
 def verifica_dados_novos(cdempresa,dia,mes,ano):
     cur = conecta()    
-    return cur.execute(f"select nrnotafiscal from notafiscal where notafiscal.dtemissao between '{mes}-{dia}-{ano}' and '{mes}-{dia+1}-{ano}' and cdoperacaointerna in(7,53) and cdempresa = {cdempresa}")    
+    return cur.execute(f"select nrnotafiscal from notafiscal where notafiscal.dtemissao between '{mes}-{dia}-{ano}' and '{mes}-{dia+29}-{ano}' and cdoperacaointerna in(7,53) and cdempresa = {cdempresa}")    
     print(cur.fetchall())
     # checar com banco do django
 
@@ -71,8 +78,10 @@ def mapeia_dados_firebird():
     join formapagamento fp on (c.cdformapagamento = fp.cdformapagamento)   \
     join subformapagamento subfp on (c.cdsubformapagamento = subfp.cdsubformapagamento and c.cdformapagamento = subfp.cdformapagamento)    \
     left join notafiscalcancelamento cancela on (cancela.cdnotafiscal = notafiscal.cdnotafiscal and cancela.cdempresa = notafiscal.cdempresa  )    \
-        where notafiscal.dtemissao > '01-01-2019' and notafiscal.cdoperacaointerna in(7,53) and  cancela.cdmotivocancelamento IS NULL"
+        where notafiscal.dtemissao > '01-01-2016' and notafiscal.cdoperacaointerna in(7,53) and  cancela.cdmotivocancelamento IS NULL"
+    print('Conectando ao banco...')
     cur = conecta()
+    print('conectado!')
     cur.execute(SELECT)
     #print(cur.fetchall())
     return cur.fetchall()
@@ -275,9 +284,7 @@ def migra_nota(nota,dia,mes,ano,cdempresa):
 
 def migra_dados():
     aux = []
-    dados_fb = mapeia_dados_firebird()
-
-    
+    dados_fb = mapeia_dados_firebird()    
 
     for i in dados_fb:
 
@@ -295,8 +302,11 @@ def migra_dados():
 
         cur = conecta()
         cur.execute(SELECT)
-        custo_medio  =  cur.fetchone()
-        #print(custo_medio)
+        custo_medio_tuple  =  cur.fetchone()
+        if custo_medio_tuple is None:
+            custo_medio = None
+        else:
+            custo_medio = custo_medio_tuple[0]
         
         if i[2] is None :
             print('nota fiscal nula, pulando registro')
@@ -333,18 +343,17 @@ def migra_dados():
             if i[14] == 'DEV. VENDA VEÍCULO NOVO':
                 Valor_da_Nota = Valor_da_Nota * (-1)
                 Quantidade = Quantidade * (-1)
-                Quantidade = Quantidade * (-1)
                 if custo_medio is not None:
-                    Custo_Medio = custo_medio[0] * (-1)
+                    Custo_Medio = custo_medio * (-1)
 
             Operacao_Interna        = i[14]
             Data_Compra             = i[1]
 
             if custo_medio is None:
-                Custo_Medio             = i[15]
+                Custo_Medio = i[15]
             else:
                 if i[14] != 'DEV. VENDA VEÍCULO NOVO':
-                    Custo_Medio = custo_medio[0]
+                    Custo_Medio = custo_medio
                 Margem = Valor_da_Nota - Custo_Medio
                 Margem_Porcentagem = Margem / Valor_da_Nota 
 
@@ -413,8 +422,11 @@ def migra_dados():
                 Modalidade_Venda      = Modalidade_Venda,
                 # Grupo_Pessoa_Vendedor = i[]
             )
+            lista.save()
+            print('salvou')
+            #print(Data)
         #print(i)
         aux.append(lista)
 
-    Moto.objects.bulk_create(aux)
-    print('deu certo')
+    # Moto.objects.bulk_create(aux)
+    # print('deu certo')

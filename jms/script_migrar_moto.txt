@@ -1,0 +1,11 @@
+1 - http://localhost:8000/sync/moto/completo
+Aguardar migrar tudo
+2 - http://localhost:8000/api/remove_moto_cancel
+Fazer exclusão de notas canceladas
+
+3 - http://localhost:8000/atualiza/cidade/moto
+atualizar cidades Moto
+
+** IGUALAR NOMES CIDADES E MOTOS COM BASE NOS MODELOS CADASTRADOS NO SISTEMA
+
+

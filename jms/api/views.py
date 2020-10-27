@@ -41,6 +41,21 @@ list_meses_metas = {
             12: 'aplicado_dez'
         }
 
+list_meses_moto = {
+            1 : 'jan',
+            2 : 'fev',
+            3 : 'mar',
+            4 : 'abr',
+            5 : 'mai',
+            6 : 'jun',
+            7 : 'jul',
+            8 : 'ago',
+            9 : 'sete',
+            10: 'out',
+            11: 'nov',
+            12: 'dez'
+        }
+
 @api_view(['GET'])
 def desempenho_vendedor(request,vendedor,regiao,dia,mes,ano):
     ultimo_dia_mes = calendar.monthrange(ano,mes)
@@ -213,7 +228,7 @@ def desempenho_modelo(request,modelo,regiao,dia,mes,ano):
         
         new_dict = {
             'id' : count,
-            'nome' : i.usuario.username,
+            'nome' : i.usuario.first_name,
             'avatar' : i.avatar.url,
             'moto' : moto,
             'cota' : cota,
@@ -318,6 +333,8 @@ def desempenho_geral_cabecalho(request,dia,mes,ano):
     cota = Cota.objects.filter(Municipio__in = cidades, Data_da_Venda__lte=f'{ano}-{mes}-{dia}', Data_da_Venda__gte=f'{ano}-{mes}-1').count()
     moto = Moto.objects.filter(Empresa__in = regiao, Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
 
+    meta_moto = PlanejadoMoto
+
     visita = 0
 
     context = {
@@ -379,12 +396,13 @@ def desempenho_regiao_equipe(request, regiao,id,dia,mes,ano):
         total_mensal_meta_cota = VendedorModeloCota.objects.filter(vendedor = i , ano = ano_temporario).aggregate(Sum(list_meses[mes]))[f'{list_meses[mes]}__sum']
         if total_mensal_meta is None:
             print(i.usuario.first_name, 'NÃO POSSUI META')
+            total_mensal_meta_cota = 0
         #print(total_mensal_meta)
 
         acumulado_mes = Moto.objects.filter(Vendedor_cpf = cpf, Municipio__in = list_cidades, Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
         acumulado_mes_cota = Cota.objects.filter(Cpf_Vendedor = cpf, Municipio__in = list_cidades, Data_da_Venda__lte=f'{ano}-{mes}-{dia}', Data_da_Venda__gte=f'{ano}-{mes}-1').count()
         
-        if total_mensal_meta == 0 or acumulado_mes is None or total_mensal_meta_cota == 0:
+        if total_mensal_meta == 0 or acumulado_mes is None or total_mensal_meta_cota == 0 or acumulado_mes_cota is None:
             porcen_desempenho = 0
             porcen_desempenho_cota = 0
         else:
@@ -498,18 +516,21 @@ def desempenhoCidade(request, cidade, dia,mes,ano):
         try :
             # PEGA USERNAME PARA BUSCAR NA TABELA COTAS PORQUE O NOME EH DIFERENTE DA TABELA DE MOTOS
             # SE NAO ENCONTRAR QUERY ELE RETORNA SEM CADASTRO
-            vendedor = User.objects.get(first_name = i.Vendedor)
-            avatar = Perfil.objects.get(usuario = vendedor)
-            new_dict_indi['avatar'] = avatar.avatar.url
-            cota = Cota.objects.filter(Nome_Vendedor = vendedor.username, Municipio = cidade, Data_da_Venda=f'{ano}-{mes}-{dia}').count()
+            Perfil.objects.get(cpf = i.Vendedor_cpf)
         except User.DoesNotExist:
             cota = '0'
-        # LEMBRAR DE INTEGRAR VISITA COM OUTRO LUGAR POSTERIOR MENTE
+        else:            
+            vendedor = Perfil.objects.get(cpf = i.Vendedor_cpf)
+            # LEMBRAR DE INTEGRAR VISITA COM OUTRO LUGAR POSTERIOR MENTE
+            new_dict_indi['avatar'] = vendedor.avatar.url
+            cota = Cota.objects.filter(Cpf_Vendedor = i.Vendedor_cpf, Municipio = cidade, Data_da_Venda=f'{ano}-{mes}-{dia}').count()
+            new_dict_indi['cpf'] = i.Vendedor_cpf
         visita = 152
         new_dict_indi['nome'] = i.Vendedor
         new_dict_indi['moto'] = moto
         new_dict_indi['cota'] = cota
         new_dict_indi['visita'] = visita
+
 
         vendedor_forest_dict[count_forest] = new_dict_indi
         count_forest = count_forest + 1
@@ -645,6 +666,9 @@ def desempenhoMotoRegiao(request,regiao, dia,mes,ano):
         acumulado_mes_cota = Cota.objects.filter(Modelo = value.nome, Municipio__in = list_cidade, Data_da_Venda__lte=f'{ano}-{mes}-{dia}', Data_da_Venda__gte=f'{ano}-{mes}-1').count()
         acumulado_mes = Moto.objects.filter(Veiculo = value.nome, Municipio__in = list_cidade, Data__lte=f'{ano}-{mes}-{dia}', Data__gte=f'{ano}-{mes}-1').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
         
+        print(value.nome)
+        print(acumulado_mes_cota)
+        print(total_mensal_meta_cota)
         ############## MOTO
         if total_mensal_meta == 0 or acumulado_mes is None:
             porcen_desempenho = 0
@@ -704,7 +728,7 @@ def desempenhoMotoRegiao(request,regiao, dia,mes,ano):
             'area_cota' : area_cota,
             'desempenho': desempenho,
             'desempenho_cota': desempenho_cota,
-            'porcen_desempenho': f'{porcen_desempenho:.2f}'
+            'porcen_desempenho': f'{porcen_desempenho:.2f}%'
         }
         context[contador] = new_dict
         contador = contador + 1
@@ -4202,11 +4226,10 @@ def analitico(request,dia,mes,ano):
         meta = 0
         for x in query_vendedores:
             meta_obj = VendedorModelo.objects.filter(vendedor = x).aggregate(Sum(list_meses_metas[mes]))[f'{list_meses_metas[mes]}__sum']
-            print(x.id)
             meta = meta_obj + meta
     elif modelos == '' and vendedores == '':
         # PEGA TODAS AS CIDADES DA REGIAO PARA APLICAR NO PORRA_TOTAL E JOGAR NOS TOTTAIS QUANTIDADE E PORCENTAGEM
-        cidade_obj = Cidade.objects.get(nome = cidades[0])
+        cidade_obj = Cidade.objects.get(nome__in = cidades)
         regiao = cidade_obj.regiao
         cidades_regiao = list(Cidade.objects.filter(regiao = regiao))
         porra = {
@@ -4217,6 +4240,9 @@ def analitico(request,dia,mes,ano):
         }
         QUERY = f'Municipio__in = {cidades}'
         QUERY_TOTALIZADORES = f'Municipio__in = {cidades}'
+        meta = CidadeModelo.objects.filter(cidade = cidade_obj).aggregate(Sum(list_meses_metas[mes]))[f'{list_meses_metas[mes]}__sum']
+        print(meta)
+
     elif modelos == '':
         porra = {
             'Vendedor_cpf__in' : vendedores, 
@@ -4284,9 +4310,6 @@ def analitico(request,dia,mes,ano):
 
     result = executa(porra,porra_total,dia,mes,ano,modelos,cidades,vendedores, meta)
 
-    context = {
-        'str': result,
-    }
     return Response(result)
 
 def executa(QUERY,QUERY_TOTALIZADORES,dia,mes,ano,modelos,cidades,vendedores, meta = 0):
@@ -4969,181 +4992,250 @@ def executa(QUERY,QUERY_TOTALIZADORES,dia,mes,ano,modelos,cidades,vendedores, me
 def sazonalidade(request):
 
 
-    def cidade(ano):
-        obj_cidade = Cidade.objects.all()
-        realizado_cidade_dict = dict()
+    def cidade(anos):
+        obj_cidade = Cidade.objects.all()        
         realizado_cidade_mes_dict = dict()
         total_dict = dict()
-        for x in obj_cidade:
+        
+        
+        for ano in anos:
+            realizado_cidade_dict = dict()
+            for x in obj_cidade:
 
-            realizado_cidade_ano = Moto.objects.filter(Municipio = x.nome, Data__gte = f'{ano}-1-1', Data__lte=f'{ano}-12-31').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
-            if realizado_cidade_ano is None:
-                realizado_cidade_ano = 0
+                realizado_cidade_ano = Moto.objects.filter(Municipio = x.nome, Data__gte = f'{ano}-1-1', Data__lte=f'{ano}-12-31').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+                if realizado_cidade_ano is None:
+                    realizado_cidade_ano = 0
 
-            realizado_cidade_mes_dict['anual'] = realizado_cidade_ano
+                realizado_cidade_mes_dict['anual'] = realizado_cidade_ano
 
-            for mes in range(1,13):
+                for mes in range(1,13):
+                    ultimo_dia_mes = calendar.monthrange(ano,mes)                    
+                    realizado_cidade_mes = Moto.objects.filter(Municipio = x.nome, Data__gte = f'{ano}-{mes}-1', Data__lte=f'{ano}-{mes}-{ultimo_dia_mes[1]}').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+                    if realizado_cidade_mes is None or realizado_cidade_mes < 0:
+                        porcentagem_mes = 0
+                        realizado_cidade_mes_dict[mes] = 0
+                    else:
+                        #porcentagem_mes = realizado_cidade_mes / realizado_cidade_ano     
+                        porcentagem_mes = (realizado_cidade_mes / realizado_cidade_ano) * 100                               
+                        realizado_cidade_mes_dict[mes] = float(format(porcentagem_mes, '.2f'))
+                        realizado_cidade_dict[x.nome] = realizado_cidade_mes_dict                        
+                realizado_cidade_mes_dict = {}
+            total_dict[ano] = realizado_cidade_dict
+
+                # calcula media dos anos
+        sazonlidade_dici = {}
+        for m in range (1,13):
+            for re in obj_cidade:
+                temp_sazonalidade_cici =  {}
+                media = 0
+                acumulado = 0
+                for z in anos:
+                    try:
+                        acumulado += total_dict[z][re.nome][m] 
+                    except:
+                        print('nao existe cidade')
+                media = acumulado / 2
+                print(re.nome, '->>', m, '->>',  media)
                 instancia = SazonalidadeCidade()
-                instancia.cidade = x
+                instancia.cidade = re
                 instancia.ano_base = ano
-                instancia.vl_total_anual = realizado_cidade_ano
-                ultimo_dia_mes = calendar.monthrange(ano,mes)
-                instancia.mes = mes
-                realizado_cidade_mes = Moto.objects.filter(Municipio = x.nome, Data__gte = f'{ano}-{mes}-1', Data__lte=f'{ano}-{mes}-{ultimo_dia_mes[1]}').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
-                if realizado_cidade_mes is None or realizado_cidade_mes < 0:
-                    porcentagem_mes = 0
-                    realizado_cidade_mes_dict[mes] = 0
-
-                    instancia.percentual = 0
-                else:
-                    #porcentagem_mes = realizado_cidade_mes / realizado_cidade_ano     
-                    porcentagem_mes = (realizado_cidade_mes / realizado_cidade_ano) * 100                               
-                    realizado_cidade_mes_dict[mes] = float(format(porcentagem_mes, '.2f'))
-                    realizado_cidade_dict[x.nome] = realizado_cidade_mes_dict
-
-                    instancia.percentual = float(format(porcentagem_mes, '.2f'))
+                instancia.vl_total_anual = total_dict[z][re.nome]['anual']       
+                instancia.mes = m
+                instancia.percentual = media
                 instancia.save()
-            realizado_cidade_mes_dict = {}
-        return realizado_cidade_dict            
+        return total_dict            
 
-    def vendedor(ano):
+    def vendedor(anos):
         obj_vendedor = Moto.objects.distinct('Vendedor_cpf').exclude(Vendedor = 'VENDEDOR SEM NOME')
-        realizado_vendedor_dict = dict()
+
         realizado_vendedor_mes_dict = dict()
         total_dict = dict()
-        for x in obj_vendedor:
 
-            realizado_vendedor_ano = Moto.objects.filter(Vendedor_cpf = x.Vendedor_cpf, Data__gte = f'{ano}-1-1', Data__lte=f'{ano}-12-31').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
-            if realizado_vendedor_ano is None:
-                realizado_vendedor_ano = 0
+        for ano in anos:
+            realizado_vendedor_dict = dict()
+            for x in obj_vendedor:
 
-            realizado_vendedor_mes_dict['anual'] = realizado_vendedor_ano
+                realizado_vendedor_ano = Moto.objects.filter(Vendedor_cpf = x.Vendedor_cpf, Data__gte = f'{ano}-1-1', Data__lte=f'{ano}-12-31').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+                if realizado_vendedor_ano is None:
+                    realizado_vendedor_ano = 0
+
+                realizado_vendedor_mes_dict['anual'] = realizado_vendedor_ano
+                
+                for mes in range(1,13):                    
+                    ultimo_dia_mes = calendar.monthrange(ano,mes)
+                    
+                    realizado_cidade_mes = Moto.objects.filter(Vendedor_cpf = x.Vendedor_cpf, Data__gte = f'{ano}-{mes}-1', Data__lte=f'{ano}-{mes}-{ultimo_dia_mes[1]}').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+                    if realizado_cidade_mes is None or realizado_cidade_mes < 0:
+                        porcentagem_mes = 0
+                        realizado_vendedor_mes_dict[mes] = 0
+                    else:
+                        #porcentagem_mes = realizado_cidade_mes / realizado_vendedor_ano     
+                        porcentagem_mes = (realizado_cidade_mes / realizado_vendedor_ano) * 100                               
+                        realizado_vendedor_mes_dict[mes] = float(format(porcentagem_mes, '.2f'))
+                        realizado_vendedor_dict[x.Vendedor] = realizado_vendedor_mes_dict                       
             
-            for mes in range(1,13):
+                    #instancia.save()            
+                realizado_vendedor_mes_dict = {}
+            total_dict[ano] = realizado_vendedor_dict
+                        
+        # calcula media dos anos
+        sazonlidade_dici = {}
+        for m in range (1,13):
+            for re in obj_vendedor:
+                temp_sazonalidade_cici =  {}
+                media = 0
+                acumulado = 0
+                for z in anos:
+                    try:
+                        acumulado += total_dict[z][re.Vendedor][m] 
+                    except:
+                        print('nao existe vendedor')
+                media = acumulado / 2
+                print(re.Vendedor, '->>', m, '->>',  media)
                 instancia = SazonalidadeVendedor()
-                instancia.vendedor_nome = x.Vendedor
-                instancia.vendedor_cpf = x.Vendedor_cpf
+                instancia.vendedor_nome = re.Vendedor
+                instancia.vendedor_cpf = re.Vendedor_cpf
                 instancia.ano_base = ano
-                instancia.vl_total_anual = realizado_vendedor_ano
-                ultimo_dia_mes = calendar.monthrange(ano,mes)
-                instancia.mes = mes
-                realizado_cidade_mes = Moto.objects.filter(Vendedor_cpf = x.Vendedor_cpf, Data__gte = f'{ano}-{mes}-1', Data__lte=f'{ano}-{mes}-{ultimo_dia_mes[1]}').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
-                if realizado_cidade_mes is None or realizado_cidade_mes < 0:
-                    porcentagem_mes = 0
-                    realizado_vendedor_mes_dict[mes] = 0
+                try:
+                    instancia.vl_total_anual = total_dict[z][re.Vendedor]['anual'] 
+                except:
+                    instancia.vl_total_anual = 0
+                instancia.mes = m
+                instancia.percentual = media
+                instancia.save()
+        return total_dict
 
-                    instancia.percentual = 0
-                else:
-                    #porcentagem_mes = realizado_cidade_mes / realizado_vendedor_ano     
-                    porcentagem_mes = (realizado_cidade_mes / realizado_vendedor_ano) * 100                               
-                    realizado_vendedor_mes_dict[mes] = float(format(porcentagem_mes, '.2f'))
-                    realizado_vendedor_dict[x.Vendedor] = realizado_vendedor_mes_dict
-
-                    instancia.percentual = float(format(porcentagem_mes, '.2f'))
-        
-                instancia.save()            
-            realizado_vendedor_mes_dict = {}
-        return realizado_vendedor_dict
-
-    def regiao(ano):
-        obj_regiao = Cidade.objects.distinct('regiao')
+    def regiao(anos):
+        obj_regiao = Cidade.objects.distinct('regiao').exclude(regiao = 'OUTROS')
         realizado_regiao_dict = dict()
         realizado_regiao_mes_dict = dict()
         total_dict = dict()
-        for x in obj_regiao:
-            list_cidades_regiao = list(Cidade.objects.filter(regiao = x.regiao))
-            realizado_regiao_ano = Moto.objects.filter(Municipio__in = list_cidades_regiao, Data__gte = f'{ano}-1-1', Data__lte=f'{ano}-12-31').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
-            if realizado_regiao_ano is None:
-                realizado_regiao_ano = 0
-
-            realizado_regiao_mes_dict['anual'] = realizado_regiao_ano
-            
-            for mes in range(1,13):
-                instancia = SazonalidadeRegiao()
-                instancia.regiao = x.regiao  
-                instancia.ano_base = ano
-                instancia.vl_total_anual = realizado_regiao_ano
-                ultimo_dia_mes = calendar.monthrange(ano,mes)
-                instancia.mes = mes
-                realizado_cidade_mes = Moto.objects.filter(Municipio__in = list_cidades_regiao, Data__gte = f'{ano}-{mes}-1', Data__lte=f'{ano}-{mes}-{ultimo_dia_mes[1]}').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
-                if realizado_cidade_mes is None or realizado_cidade_mes < 0:
-                    porcentagem_mes = 0
-                    realizado_regiao_mes_dict[mes] = 0
-                    instancia.percentual = 0
-                else:
-                    #porcentagem_mes = realizado_cidade_mes / realizado_regiao_ano     
-                    porcentagem_mes = (realizado_cidade_mes / realizado_regiao_ano) * 100                               
-                    realizado_regiao_mes_dict[mes] = float(format(porcentagem_mes, '.2f'))
-                    realizado_regiao_dict[x.regiao] = realizado_regiao_mes_dict
-
-                    instancia.percentual = float(format(porcentagem_mes, '.2f'))
-        
-                instancia.save()            
-            realizado_regiao_mes_dict = {}
-        return realizado_regiao_dict
-
-    def modelo(ano):
-        obj_modelo = MotoPerfil.objects.distinct('nome')
-        realizado_modelo_dict = dict()
-        realizado_modelo_mes_dict = dict()
-        total_dict = dict()
-        for x in obj_modelo:
-
-            #LOOP PARA GRAVAR A SAZONALIDADE DO MODELO ESPECIFICO EM TODAS AS REGIÕES
-            for regiao in REGIAO_CHOICE:
-                # COLOCA AS CIDADES DENTRO DA REGIAO
-                cidades = Cidade.objects.filter(regiao = regiao[0])
-                list_cidade = []
-                for cidade in cidades:
-                    list_cidade.append(cidade.nome)
-
-                realizado_regiao_ano = Moto.objects.filter(Municipio__in = list_cidade, Veiculo = x.nome, Data__gte = f'{ano}-1-1', Data__lte=f'{ano}-12-31').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+        for ano in anos:
+            realizado_regiao_dict = dict()
+            for x in obj_regiao:
+                list_cidades_regiao = list(Cidade.objects.filter(regiao = x.regiao))
+                realizado_regiao_ano = Moto.objects.filter(Municipio__in = list_cidades_regiao, Data__gte = f'{ano}-1-1', Data__lte=f'{ano}-12-31').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
                 if realizado_regiao_ano is None:
                     realizado_regiao_ano = 0
 
-                realizado_modelo_mes_dict['anual'] = realizado_regiao_ano
+                realizado_regiao_mes_dict['anual'] = realizado_regiao_ano
                 
-                for mes in range(1,13):
-                    instancia = SazonalidadeModelo()
-                    instancia.regiao = regiao[0]
-                    instancia.modelo = x
-                    instancia.ano_base = ano
-                    instancia.vl_total_anual = realizado_regiao_ano
+                for mes in range(1,13):                    
                     ultimo_dia_mes = calendar.monthrange(ano,mes)
-                    instancia.mes = mes
-                    realizado_modelo_mes = Moto.objects.filter(Municipio__in = list_cidade, Veiculo = x.nome, Data__gte = f'{ano}-{mes}-1', Data__lte=f'{ano}-{mes}-{ultimo_dia_mes[1]}').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
-                    if realizado_modelo_mes is None or realizado_modelo_mes < 0 or realizado_regiao_ano == 0:
+                    realizado_cidade_mes = Moto.objects.filter(Municipio__in = list_cidades_regiao, Data__gte = f'{ano}-{mes}-1', Data__lte=f'{ano}-{mes}-{ultimo_dia_mes[1]}').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+                    if realizado_cidade_mes is None or realizado_cidade_mes < 0:
                         porcentagem_mes = 0
-                        realizado_modelo_mes_dict[mes] = 0
-                        instancia.percentual = 0
+                        realizado_regiao_mes_dict[mes] = 0
                     else:
-                        #porcentagem_mes = realizado_modelo_mes / realizado_regiao_ano     
-                        porcentagem_mes = (realizado_modelo_mes / realizado_regiao_ano) * 100                               
-                        realizado_modelo_mes_dict[mes] = float(format(porcentagem_mes, '.2f'))
-                        realizado_modelo_dict[x.nome] = realizado_modelo_mes_dict
+                        #porcentagem_mes = realizado_cidade_mes / realizado_regiao_ano     
+                        porcentagem_mes = (realizado_cidade_mes / realizado_regiao_ano) * 100                               
+                        realizado_regiao_mes_dict[mes] = float(format(porcentagem_mes, '.2f'))
+                        realizado_regiao_dict[x.regiao] = realizado_regiao_mes_dict                        
+                realizado_regiao_mes_dict = {}
+            total_dict[ano] = realizado_regiao_dict
 
-                        instancia.percentual = float(format(porcentagem_mes, '.2f'))
-            
-                    instancia.save()            
-                realizado_modelo_mes_dict = {}
-        return realizado_modelo_dict
+        # calcula media dos anos
+        sazonlidade_dici = {}
+        for m in range (1,13):
+            for re in obj_regiao:
+                temp_sazonalidade_cici =  {}
+                media = 0
+                acumulado = 0
+                for z in anos:
+                    acumulado = total_dict[z][re.regiao][m] + acumulado
+                media = acumulado / 2
+                print(re.regiao, '->>', m, '->>',  media)
+                instancia = SazonalidadeRegiao()
+                instancia.mes = m
+                instancia.regiao = re.regiao 
+                instancia.ano_base = z
+                instancia.vl_total_anual = total_dict[z][re.regiao]['anual']
+                instancia.percentual = float(format(media, '.2f'))
+                instancia.save()
+        return total_dict
+
+    def modelo(anos):
+        obj_modelo = MotoPerfil.objects.distinct('nome')
+        realizado_modelo_mes_dict = dict()
+        total_dict = dict()
+        obj_regiao = Cidade.objects.distinct('regiao').exclude(regiao = 'OUTROS')
 
 
-    ano_base = 2019
-    vendedor = vendedor(ano_base)
-    cidade = cidade(ano_base)
-    regiao = regiao(ano_base)
-    modelo = modelo(ano_base)
+        for ano in anos:
+            realizado_modelo_dict = dict()
+            regiao_dici = {}
+            for x in obj_modelo:
+                #LOOP PARA GRAVAR A SAZONALIDADE DO MODELO ESPECIFICO EM TODAS AS REGIÕES
+                for regiao in obj_regiao:
+                    # COLOCA AS CIDADES DENTRO DA REGIAO
+                    cidades = Cidade.objects.filter(regiao = regiao.regiao)
+                    list_cidade = []
+                    for cidade in cidades:
+                        list_cidade.append(cidade.nome)
+
+                    realizado_regiao_ano = Moto.objects.filter(Municipio__in = list_cidade, Veiculo = x.nome, Data__gte = f'{ano}-1-1', Data__lte=f'{ano}-12-31').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+                    if realizado_regiao_ano is None:
+                        realizado_regiao_ano = 0
+
+                    realizado_modelo_mes_dict['anual'] = realizado_regiao_ano
+                    
+                    for mes in range(1,13):
+
+                        ultimo_dia_mes = calendar.monthrange(ano,mes)
+                        #instancia.mes = mes
+                        realizado_modelo_mes = Moto.objects.filter(Municipio__in = list_cidade, Veiculo = x.nome, Data__gte = f'{ano}-{mes}-1', Data__lte=f'{ano}-{mes}-{ultimo_dia_mes[1]}').exclude(Cancelada = True).aggregate(Sum('Quantidade'))['Quantidade__sum']
+                        if realizado_modelo_mes is None or realizado_modelo_mes < 0 or realizado_regiao_ano == 0:
+                            porcentagem_mes = 0
+                            realizado_modelo_mes_dict[mes] = 0
+                            #instancia.percentual = 0
+                        else:
+                            #porcentagem_mes = realizado_modelo_mes / realizado_regiao_ano     
+                            porcentagem_mes = (realizado_modelo_mes / realizado_regiao_ano) * 100                               
+                            realizado_modelo_mes_dict[mes] = float(format(porcentagem_mes, '.2f'))
+                    realizado_modelo_dict[x.nome] = realizado_modelo_mes_dict
+                    regiao_dici[regiao.regiao] = realizado_modelo_dict
+                    realizado_modelo_mes_dict = {}
+            total_dict[ano] = regiao_dici                           
+                
+                        
+
+        # calcula media dos anos
+        sazonlidade_dici = {}
+        for m in range (1,13):
+            for re in obj_regiao:
+                for modelo in obj_modelo:
+                    media = 0
+                    acumulado = 0
+                    for z in anos:
+                        acumulado = total_dict[z][re.regiao][modelo.nome][m] + acumulado
+                    media = acumulado / 2
+                    print(re.regiao, '->>', m, '->>', modelo.nome, '->>',  media)
+                    instancia = SazonalidadeModelo()
+                    instancia.regiao = re.regiao
+                    instancia.modelo = modelo
+                    instancia.ano_base = z
+                    instancia.vl_total_anual = total_dict[z][re.regiao][modelo.nome]['anual']
+                    instancia.mes = m
+                    instancia.percentual = float(format(media, '.2f'))
+                    instancia.save()    
+        return total_dict
+
+
+    anos = [2018,2019]
+    #vendedor = vendedor(anos)
+    #cidade = cidade(anos)
+    #regiao = regiao(anos)
+    modelo = modelo(anos)
 
 
     context = {
-        'ok'
-        'vendedor' : vendedor,
-        'cidade' : cidade,
-        'regiao' : regiao,
+        #'vendedor' : vendedor,
+        #'cidade' : cidade,
+        #'regiao' : regiao,
         'modelo' : modelo,
     }
     return Response(context)
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def sazonalidade_cota(request):
@@ -5852,7 +5944,7 @@ def previsto_sazonalidade_vendedor_regiao(request, regiao,valor):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def remove_moto_cancel(request):
-    canceladas = Moto.objects.filter(Sub_Forma_Fabrica = 'CARTEIRA LOJA').distinct('Chassi')
+    canceladas = Moto.objects.filter(Sub_Forma_Fabrica__in = ['CARTEIRA LOJA', 'DEVOLUCAO DE VENDA']).distinct('Chassi')
     list_chassi = []
     for x in canceladas:
         list_chassi.append(x.Chassi)    
@@ -5914,3 +6006,17 @@ def remove_moto_cancel(request):
     print('NUMERO DE NOTAS PARA CADA CHASSI...', list_cliente)
         
     return Response('ok')
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def list_cidade_por_regiao(request):
+    obj_regiao = Cidade.objects.all().distinct('regiao')
+    context = {}
+    
+    for x in obj_regiao:
+        aux = []
+        obj_cidade = Cidade.objects.filter(regiao = x.regiao)
+        for z in obj_cidade:
+            aux.append(z.nome)
+        context[x.regiao] = aux
+    return Response(context)

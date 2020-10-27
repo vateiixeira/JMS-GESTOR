@@ -1,0 +1,46 @@
+select                                                                                                                               
+    empresa.dsapelido as Empresa ,   
+    notafiscal.dtemissao as Data,   
+    notafiscal.nrnotafiscal as Nota_Fiscal,   
+    notafiscal.dsserie as Serie,   
+    notafiscal.vltotalnota as Valor_da_Nota ,   
+    Moto.dsinsumo as modelo,   
+    Moto.cdinsumofabricante as chassi ,   
+    fp.dsformapagamento as forma_pagamento,   
+    Vendedor.nmpessoa as vendedor_nome,   
+    Vendedor.nrcpfcnpj as vendedor_cpf,   
+    Cliente.nmpessoa as cliente_nome,   
+    Cliente.nrcpfcnpj as cliente_cpf,   
+    subgrupoinsumo.dssubgrupoinsumo as Novo,   
+    itemnotafiscal.qtinsumo as Quantidade,   
+    operacaointerna.dsoperacaointerna as motivo_venda,   
+    itemnotafiscal.vltotalcontabilitem as custo_medio,   
+    veiculo.nrano as Ano_Fab,   
+    veiculo.nrmodelo as Modelo_Fab,   
+    municipio.dsmunicipio,   
+    cor.dscor as cor_veiculo   ,   
+    fp.dsformafabrica as forma_fabrica,   
+    subfp.dssubformafabrica as sub_forma_fabrica,   
+    subfp.dssubformapagamento as sub_forma_pagamento   
+    from notafiscal    
+    join itemnotafiscal on (notafiscal.cdnotafiscal = itemnotafiscal.cdnotafiscal and itemnotafiscal.cdempresa = notafiscal.cdempresa)   
+    join insumo Moto on (Moto.cdinsumo = itemnotafiscal.cdinsumo)   
+    join subgrupoinsumo on (subgrupoinsumo.cdsubgrupoinsumo = Moto.cdsubgrupoinsumo and subgrupoinsumo.cdgrupoinsumo = Moto.cdgrupoinsumo)   
+    join operacaointerna on (operacaointerna.cdoperacaointerna = notafiscal.cdoperacaointerna)   
+    join empresa on (empresa.cdempresa = notafiscal.cdempresa)   
+    left join nfsaidasaida on (nfsaidasaida.cdnotafiscal = notafiscal.cdnotafiscal and nfsaidasaida.cdempresa = notafiscal.cdempresa)   
+    left join saida on (saida.cdsaida = nfsaidasaida.cdsaida and saida.cdempresa = nfsaidasaida.cdempresa)   
+    left join veiculo on (veiculo.cdinsumo = Moto.cdinsumo)   
+    left join cor on (cor.cdcor = veiculo.cdcor)   
+    left join pessoa Vendedor on (Vendedor.cdpessoa = saida.cdvendedor )   
+    join pessoa Cliente on (cliente.cdpessoa = notafiscal.cdpessoa)   
+    join municipio on (municipio.cdmunicipio = notafiscal.cdmunicipio)   
+    left join conta c on (notafiscal.cdempresa = c.cdempresa and notafiscal.cdnotafiscal = c.cdnotafiscal and   
+                                c.CDCONTA = (select first 1 (c1.CDCONTA)   
+                        from CONTA c1 inner join FORMAPAGAMENTO fp on fp.CDFORMAPAGAMENTO = c1.CDFORMAPAGAMENTO   
+                        where c1.CDEMPRESA = c.CDEMPRESA   
+                                and c1.CDNOTAFISCAL = c.CDNOTAFISCAL))   
+    join formapagamento fp on (c.cdformapagamento = fp.cdformapagamento)   
+    join subformapagamento subfp on (c.cdsubformapagamento = subfp.cdsubformapagamento and c.cdformapagamento = subfp.cdformapagamento)    
+    left join notafiscalcancelamento cancela on (cancela.cdnotafiscal = notafiscal.cdnotafiscal and cancela.cdempresa = notafiscal.cdempresa  )    
+        where notafiscal.dtemissao > '01-01-2016' and notafiscal.cdoperacaointerna in(7,53) and  cancela.cdmotivocancelamento IS NULL"

@@ -92,7 +92,7 @@ DATABASES = {
     } 
       
 # import dj_database_url
-# DATABASES['default'] = dj_database_url.parse('postgres://mgwrazdkuavmyp:effe7aaeb347cabc560b2db671a170396ab07e36f6c8050cf84d6b44cf0312c7@ec2-34-232-147-86.compute-1.amazonaws.com:5432/d5d1g2hvb9shd2')
+#DATABASES['default'] = dj_database_url.parse('postgres://mgwrazdkuavmyp:effe7aaeb347cabc560b2db671a170396ab07e36f6c8050cf84d6b44cf0312c7@ec2-34-232-147-86.compute-1.amazonaws.com:5432/d5d1g2hvb9shd2')
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
@@ -167,6 +167,6 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 import datetime 
 JWT_AUTH = {
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(hours=1),
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=7),
     'JWT_ALLOW_REFRESH': True,
 }
